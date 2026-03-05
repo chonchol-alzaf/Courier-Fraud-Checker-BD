@@ -4,9 +4,9 @@ namespace Alzaf\CourierFraudCheckerBd\Services;
 use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Http;
 
-class FreeFraudCheker
+class FreeFraudChecker
 {
-    public function freeFruad($phoneNumber)
+    public function freeFraud($phoneNumber)
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
