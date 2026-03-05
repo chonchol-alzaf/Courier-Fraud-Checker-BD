@@ -1,13 +1,12 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd\Facades;
 
-use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerBd;
 use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static array check($phoneNumber)
  */
-class CourierFraudCheckerBdFacade extends Facade
+class CourierFraudChecker extends Facade
 {
     /**
      * Get the registered name of the component.
@@ -16,6 +15,6 @@ class CourierFraudCheckerBdFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return CourierFraudCheckerBd::class;
+        return "courier-fraud-checker";
     }
 }

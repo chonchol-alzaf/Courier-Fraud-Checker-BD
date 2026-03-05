@@ -1,10 +1,10 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd\Providers;
 
-use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerBd;
+use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerSupport;
 use Illuminate\Support\ServiceProvider;
 
-class CourierFraudCheckerBdServiceProvider extends ServiceProvider
+class CourierFraudCheckerProvider extends ServiceProvider
 {
     public function boot()
     {
@@ -24,6 +24,8 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
             $configPath, 'courier-fraud-checker-bd'
         );
 
-        $this->app->singleton(CourierFraudCheckerBd::class);
+        $this->app->singleton('courier-fraud-checker', function ($app) {
+            return $app->make(CourierFraudCheckerSupport::class);
+        });
     }
 }

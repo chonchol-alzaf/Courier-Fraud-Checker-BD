@@ -7,7 +7,7 @@ use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
 use Alzaf\CourierFraudCheckerBd\Services\RedxService;
 use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
 
-class CourierFraudCheckerBd
+class CourierFraudCheckerSupport
 {
     public function __construct(
         protected SteadfastService $steadfastService,
