@@ -74,14 +74,15 @@ class RedxService
         ])->get("https://redx.com.bd/api/redx_se/admin/parcel/customer-success-return-rate?phoneNumber=88{$queryPhone}");
 
         if ($response->successful()) {
-            $object = $response->json();
+            $object = $response->json('data');
+
+            $succes = (int) ($object['deliveredParcels'] ?? 0);
+            $total  = (int) ($object['totalParcels'] ?? 0);
 
             return [
-                'success' => (int) ($object['data']['deliveredParcels'] ?? 0),
-                'cancel'  => isset($object['data']['totalParcels'], $object['data']['deliveredParcels'])
-                    ? ((int) $object['data']['totalParcels'] - (int) $object['data']['deliveredParcels'])
-                    : 0,
-                'total'   => (int) ($object['data']['totalParcels'] ?? 0),
+                'success' => $succes,
+                'cancel'  => $total - $succes,
+                'total'   => $total,
             ];
         } elseif ($response->status() === 401) {
             Cache::forget($this->cacheKey);

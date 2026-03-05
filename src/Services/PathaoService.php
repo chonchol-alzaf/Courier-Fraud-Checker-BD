@@ -40,23 +40,22 @@ class PathaoService
             return ['error' => 'No access token received from Pathao'];
         }
 
-        $responseAuth = Http::withHeaders([
+        $resultResponse = Http::withHeaders([
             'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken,
         ])->post('https://merchant.pathao.com/api/v1/user/success', [
-            'phone' => $phoneNumber,
+            'phone'      => $phoneNumber,
+            'show_count' => true,
         ]);
 
-        if (! $responseAuth->successful()) {
-            return ['error' => 'Failed to retrieve customer data', 'status' => $responseAuth->status()];
+        if (! $resultResponse->successful()) {
+            return ['error' => 'Failed to retrieve customer data', 'status' => $resultResponse->status()];
         }
 
-        $object = $responseAuth->json();
+        $object = $resultResponse->json('data');
 
         return [
-            'success' => $object['data']['customer']['successful_delivery'] ?? 0,
-            'cancel'  => ($object['data']['customer']['total_delivery'] ?? 0) - ($object['data']['customer']['successful_delivery'] ?? 0),
-            'total'   => $object['data']['customer']['total_delivery'] ?? 0,
+            'customer_rating' => $object['customer_rating'] ?? "new_customer",
         ];
     }
 }

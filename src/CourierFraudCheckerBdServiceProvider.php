@@ -1,6 +1,7 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd;
 
+use Alzaf\CourierFraudCheckerBd\Services\FreeFraudCheker;
 use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
 use Alzaf\CourierFraudCheckerBd\Services\RedxService;
 use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
@@ -28,12 +29,14 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
                 protected $steadfastService;
                 protected $pathaoService;
                 protected $redxService;
+                protected $freeFruadChecker;
 
                 public function __construct($app)
                 {
                     $this->steadfastService = $app->make(SteadfastService::class);
                     $this->pathaoService    = $app->make(PathaoService::class);
                     $this->redxService      = $app->make(RedxService::class);
+                    $this->freeFruadChecker = $app->make(FreeFraudCheker::class);
                 }
 
                 public function check($phoneNumber)
@@ -42,6 +45,7 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
                         'steadfast' => $this->steadfastService->steadfast($phoneNumber),
                         'pathao'    => $this->pathaoService->pathao($phoneNumber),
                         'redx'      => $this->redxService->getCustomerDeliveryStats($phoneNumber),
+                        'freeFruad' => $this->freeFruadChecker->freeFruad($phoneNumber),
                     ];
                 }
             };

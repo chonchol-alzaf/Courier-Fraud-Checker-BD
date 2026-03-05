@@ -3,6 +3,7 @@ namespace Alzaf\CourierFraudCheckerBd\Services;
 
 use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SteadfastService
 {
@@ -62,19 +63,29 @@ class SteadfastService
         }
 
         // Step 3: Access fraud data
-        $authResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
+        $resultResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
             ->get("https://steadfast.com.bd/user/frauds/check/{$phoneNumber}");
 
-        if (! $authResponse->successful()) {
-            return ['error' => 'Failed to fetch fraud data from Steadfast'];
+        if (! $resultResponse->successful()) {
+
+            $resultResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
+                ->get("https://steadfast.com.bd/user/consignment/getbyphone/{$phoneNumber}");
+
+            if (! $resultResponse->successful()) {
+
+                Log::error($resultResponse->collect()->toArray());
+                return ['error' => 'Failed to fetch fraud data from Steadfast'];
+            }
         }
 
-        $object = $authResponse->collect()->toArray();
+        $object = $resultResponse->collect()->toArray();
+
 
         $result = [
             'success' => $object['total_delivered'] ?? 0,
             'cancel'  => $object['total_cancelled'] ?? 0,
             'total'   => ($object['total_delivered'] ?? 0) + ($object['total_cancelled'] ?? 0),
+            'frauds' => $object['frauds'] ?? 0
         ];
 
         // Step 4: Logout
