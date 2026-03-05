@@ -50,18 +50,6 @@ In `config/app.php`:
 ],
 ```
 
-### Add Facade Alias (optional)
-
-In `config/app.php`:
-
-```php
-'aliases' => [
-    'FraudCheckerBd' => Alzaf\CourierFraudCheckerBd\Facades\CourierFraudCheckerBdFacade::class,
-],
-```
-
----
-
 ## 🔧 Configuration
 
 Add these environment variables to your `.env` file:
@@ -83,9 +71,9 @@ STEADFAST_PASSWORD=your_steadfast_password
 ### Basic Usage
 
 ```php
-use CourierFraudCheckerBd;
+use Alzaf\CourierFraudCheckerBd\Facades\CourierFraudCheckerBdFacade;
 
-$result = CourierFraudCheckerBd::check('01641377742');
+$result = CourierFraudCheckerBdFacade::check('01641377742');
 
 print_r($result);
 ```

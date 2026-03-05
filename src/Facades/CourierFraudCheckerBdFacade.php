@@ -1,6 +1,7 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd\Facades;
 
+use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerBd;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -15,6 +16,6 @@ class CourierFraudCheckerBdFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'courier-fraud-checker-bd';
+        return CourierFraudCheckerBd::class;
     }
 }

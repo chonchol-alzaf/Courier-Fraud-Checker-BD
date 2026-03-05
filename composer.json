@@ -34,10 +34,7 @@
         "laravel": {
             "providers": [
                 "Alzaf\\CourierFraudCheckerBd\\Providers\\CourierFraudCheckerBdServiceProvider"
-            ],
-            "aliases": {
-                "FraudCheckerBd": "Alzaf\\CourierFraudCheckerBd\\Facades\\CourierFraudCheckerBdFacade"
-            }
+            ]
         }
     },
     "authors": [

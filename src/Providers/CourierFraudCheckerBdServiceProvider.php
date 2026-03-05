@@ -25,7 +25,5 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(CourierFraudCheckerBd::class);
-
-        $this->app->alias(CourierFraudCheckerBd::class, 'courier-fraud-checker-bd');
     }
 }
