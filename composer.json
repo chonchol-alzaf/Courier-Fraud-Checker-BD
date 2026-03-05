@@ -33,10 +33,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Alzaf\\CourierFraudCheckerBd\\CourierFraudCheckerBdServiceProvider"
+                "Alzaf\\CourierFraudCheckerBd\\Providers\\CourierFraudCheckerBdServiceProvider"
             ],
             "aliases": {
-                "CourierFraudCheckerBd": "Alzaf\\CourierFraudCheckerBd\\Facade\\CourierFraudCheckerBdFacade"
+                "FraudCheckerBd": "Alzaf\\CourierFraudCheckerBd\\Facades\\CourierFraudCheckerBdFacade"
             }
         }
     },

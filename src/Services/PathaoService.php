@@ -1,7 +1,7 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
-use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Http;
 
 class PathaoService

@@ -46,7 +46,7 @@ In `config/app.php`:
 
 ```php
 'providers' => [
-    Alzaf\CourierFraudCheckerBd\CourierFraudCheckerBdServiceProvider::class,
+    Alzaf\CourierFraudCheckerBd\Providers\CourierFraudCheckerBdServiceProvider::class,
 ],
 ```
 
@@ -56,7 +56,7 @@ In `config/app.php`:
 
 ```php
 'aliases' => [
-    'CourierFraudCheckerBd' => Alzaf\CourierFraudCheckerBd\Facade\CourierFraudCheckerBd::class,
+    'FraudCheckerBd' => Alzaf\CourierFraudCheckerBd\Facades\CourierFraudCheckerBdFacade::class,
 ],
 ```
 
@@ -137,7 +137,7 @@ $steadfast = (new SteadfastService())->steadfast('01742263748');
 ### Custom Validation Rules
 
 ```php
-use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
 
 CourierFraudCheckerHelper::validatePhoneNumber('01742263748');
 ```
@@ -183,4 +183,3 @@ If you distribute modified versions of this package, you must also release your 
 > GPL-3.0 promotes **freedom** to use, share, and modify, but ensures that any distributed version remains **free and open-source**.
 
 ---
-

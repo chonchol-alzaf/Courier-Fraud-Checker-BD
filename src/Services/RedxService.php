@@ -1,7 +1,7 @@
 <?php
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
-use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -76,12 +76,12 @@ class RedxService
         if ($response->successful()) {
             $object = $response->json('data');
 
-            $succes = (int) ($object['deliveredParcels'] ?? 0);
+            $success = (int) ($object['deliveredParcels'] ?? 0);
             $total  = (int) ($object['totalParcels'] ?? 0);
 
             return [
-                'success' => $succes,
-                'cancel'  => $total - $succes,
+                'success' => $success,
+                'cancel'  => $total - $success,
                 'total'   => $total,
             ];
         } elseif ($response->status() === 401) {
