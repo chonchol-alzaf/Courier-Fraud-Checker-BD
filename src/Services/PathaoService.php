@@ -1,9 +1,8 @@
 <?php
+namespace Alzaf\CourierFraudCheckerBd\Services;
 
-namespace ShahariarAhmad\CourierFraudCheckerBd\Services;
-
+use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Http;
-use ShahariarAhmad\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 
 class PathaoService
 {
@@ -30,25 +29,25 @@ class PathaoService
             'password' => $this->password,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return ['error' => 'Failed to authenticate with Pathao'];
         }
 
-        $data = $response->json();
+        $data        = $response->json();
         $accessToken = trim($data['access_token'] ?? '');
 
-        if (!$accessToken) {
+        if (! $accessToken) {
             return ['error' => 'No access token received from Pathao'];
         }
 
         $responseAuth = Http::withHeaders([
-            'Content-Type' => 'application/json',
+            'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken,
         ])->post('https://merchant.pathao.com/api/v1/user/success', [
             'phone' => $phoneNumber,
         ]);
 
-        if (!$responseAuth->successful()) {
+        if (! $responseAuth->successful()) {
             return ['error' => 'Failed to retrieve customer data', 'status' => $responseAuth->status()];
         }
 
@@ -56,8 +55,8 @@ class PathaoService
 
         return [
             'success' => $object['data']['customer']['successful_delivery'] ?? 0,
-            'cancel' => ($object['data']['customer']['total_delivery'] ?? 0) - ($object['data']['customer']['successful_delivery'] ?? 0),
-            'total' => $object['data']['customer']['total_delivery'] ?? 0,
+            'cancel'  => ($object['data']['customer']['total_delivery'] ?? 0) - ($object['data']['customer']['successful_delivery'] ?? 0),
+            'total'   => $object['data']['customer']['total_delivery'] ?? 0,
         ];
     }
 }

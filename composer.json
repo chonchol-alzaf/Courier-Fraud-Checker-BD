@@ -1,5 +1,5 @@
 {
-    "name": "shahariar-ahmad/courier-fraud-checker-bd",
+    "name": "Alzaf/courier-fraud-checker-bd",
     "description": "A fraud detection tool for e-commerce platforms to analyze customer order behavior across Steadfast and Pathao couriers.",
     "type": "library",
     "license": "GPL-3.0",
@@ -27,23 +27,23 @@
     ],
     "autoload": {
         "psr-4": {
-            "ShahariarAhmad\\CourierFraudCheckerBd\\": "src/"
+            "Alzaf\\CourierFraudCheckerBd\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "ShahariarAhmad\\CourierFraudCheckerBd\\CourierFraudCheckerBdServiceProvider"
+                "Alzaf\\CourierFraudCheckerBd\\CourierFraudCheckerBdServiceProvider"
             ],
             "aliases": {
-                "CourierFraudCheckerBd": "ShahariarAhmad\\CourierFraudCheckerBd\\Facade\\CourierFraudCheckerBdFacade"
+                "CourierFraudCheckerBd": "Alzaf\\CourierFraudCheckerBd\\Facade\\CourierFraudCheckerBdFacade"
             }
         }
     },
     "authors": [
         {
-            "name": "Shahariar Ahmad",
-            "email": "muhd.shahariar@gmail.com"
+            "name": "Alzaf Dev Team",
+            "email": "chonchol@alzaf.com"
         }
     ],
     "minimum-stability": "stable",

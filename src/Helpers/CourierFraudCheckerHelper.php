@@ -1,6 +1,5 @@
 <?php
-
-namespace ShahariarAhmad\CourierFraudCheckerBd\Helpers;
+namespace Alzaf\CourierFraudCheckerBd\Helpers;
 
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;
@@ -36,11 +35,11 @@ class CourierFraudCheckerHelper
             [
                 'phone' => [
                     'required',
-                    'regex:/^01[3-9][0-9]{8}$/'
-                ]
+                    'regex:/^01[3-9][0-9]{8}$/',
+                ],
             ],
             [
-                'phone.regex' => 'Invalid Bangladeshi phone number. Remember, you do not need to include the +88 prefix. Only use the local format (e.g., 01712345678).'
+                'phone.regex' => 'Invalid Bangladeshi phone number. Remember, you do not need to include the +88 prefix. Only use the local format (e.g., 01712345678).',
             ]
         );
 
@@ -48,7 +47,6 @@ class CourierFraudCheckerHelper
             throw new InvalidArgumentException($validator->errors()->first('phone'));
         }
     }
-
 
     // CourierFraudCheckerHelper.php
     public static function checkRequiredConfig(array $requiredKeys)

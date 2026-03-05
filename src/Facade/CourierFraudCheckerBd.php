@@ -1,6 +1,5 @@
 <?php
-
-namespace ShahariarAhmad\CourierFraudCheckerBd\Facade;
+namespace Alzaf\CourierFraudCheckerBd\Facade;
 
 use Illuminate\Support\Facades\Facade;
 

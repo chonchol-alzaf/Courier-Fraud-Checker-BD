@@ -1,9 +1,8 @@
 <?php
+namespace Alzaf\CourierFraudCheckerBd\Services;
 
-namespace ShahariarAhmad\CourierFraudCheckerBd\Services;
-
+use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Http;
-use ShahariarAhmad\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 
 class SteadfastService
 {
@@ -17,7 +16,7 @@ class SteadfastService
             'courier-fraud-checker-bd.steadfast.password',
         ]);
 
-        $this->email = config('courier-fraud-checker-bd.steadfast.user');
+        $this->email    = config('courier-fraud-checker-bd.steadfast.user');
         $this->password = config('courier-fraud-checker-bd.steadfast.password');
     }
 
@@ -32,12 +31,12 @@ class SteadfastService
         preg_match('/<input type="hidden" name="_token" value="(.*?)"/', $response->body(), $matches);
         $token = $matches[1] ?? null;
 
-        if (!$token) {
+        if (! $token) {
             return ['error' => 'CSRF token not found'];
         }
 
         // Convert CookieJar to array
-        $rawCookies = $response->cookies();
+        $rawCookies   = $response->cookies();
         $cookiesArray = [];
         foreach ($rawCookies->toArray() as $cookie) {
             $cookiesArray[$cookie['Name']] = $cookie['Value'];
@@ -47,12 +46,12 @@ class SteadfastService
         $loginResponse = Http::withCookies($cookiesArray, 'steadfast.com.bd')
             ->asForm()
             ->post('https://steadfast.com.bd/login', [
-                '_token' => $token,
-                'email' => $this->email,
+                '_token'   => $token,
+                'email'    => $this->email,
                 'password' => $this->password,
             ]);
 
-        if (!($loginResponse->successful() || $loginResponse->redirect())) {
+        if (! ($loginResponse->successful() || $loginResponse->redirect())) {
             return ['error' => 'Login to Steadfast failed'];
         }
 
@@ -66,7 +65,7 @@ class SteadfastService
         $authResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
             ->get("https://steadfast.com.bd/user/frauds/check/{$phoneNumber}");
 
-        if (!$authResponse->successful()) {
+        if (! $authResponse->successful()) {
             return ['error' => 'Failed to fetch fraud data from Steadfast'];
         }
 
@@ -74,8 +73,8 @@ class SteadfastService
 
         $result = [
             'success' => $object['total_delivered'] ?? 0,
-            'cancel' => $object['total_cancelled'] ?? 0,
-            'total'  => ($object['total_delivered'] ?? 0) + ($object['total_cancelled'] ?? 0),
+            'cancel'  => $object['total_cancelled'] ?? 0,
+            'total'   => ($object['total_delivered'] ?? 0) + ($object['total_cancelled'] ?? 0),
         ];
 
         // Step 4: Logout

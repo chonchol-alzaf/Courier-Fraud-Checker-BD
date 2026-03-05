@@ -1,11 +1,10 @@
 <?php
+namespace Alzaf\CourierFraudCheckerBd;
 
-namespace ShahariarAhmad\CourierFraudCheckerBd;
-
+use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
+use Alzaf\CourierFraudCheckerBd\Services\RedxService;
+use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
 use Illuminate\Support\ServiceProvider;
-use ShahariarAhmad\CourierFraudCheckerBd\Services\SteadfastService;
-use ShahariarAhmad\CourierFraudCheckerBd\Services\PathaoService;
-use ShahariarAhmad\CourierFraudCheckerBd\Services\RedxService;
 
 class CourierFraudCheckerBdServiceProvider extends ServiceProvider
 {
@@ -24,7 +23,8 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton('courier-fraud-checker-bd', function ($app) {
-            return new class($app) {
+            return new class($app)
+            {
                 protected $steadfastService;
                 protected $pathaoService;
                 protected $redxService;
@@ -32,16 +32,16 @@ class CourierFraudCheckerBdServiceProvider extends ServiceProvider
                 public function __construct($app)
                 {
                     $this->steadfastService = $app->make(SteadfastService::class);
-                    $this->pathaoService = $app->make(PathaoService::class);
-                    $this->redxService = $app->make(RedxService::class);
+                    $this->pathaoService    = $app->make(PathaoService::class);
+                    $this->redxService      = $app->make(RedxService::class);
                 }
 
                 public function check($phoneNumber)
                 {
                     return [
                         'steadfast' => $this->steadfastService->steadfast($phoneNumber),
-                        'pathao' => $this->pathaoService->pathao($phoneNumber),
-                        'redx' => $this->redxService->getCustomerDeliveryStats($phoneNumber),
+                        'pathao'    => $this->pathaoService->pathao($phoneNumber),
+                        'redx'      => $this->redxService->getCustomerDeliveryStats($phoneNumber),
                     ];
                 }
             };

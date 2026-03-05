@@ -1,14 +1,13 @@
 <?php
+namespace Alzaf\CourierFraudCheckerBd\Services;
 
-namespace ShahariarAhmad\CourierFraudCheckerBd\Services;
-
-use Illuminate\Support\Facades\Http;
+use Alzaf\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
 use Illuminate\Support\Facades\Cache;
-use ShahariarAhmad\CourierFraudCheckerBd\Helpers\CourierFraudCheckerHelper;
+use Illuminate\Support\Facades\Http;
 
 class RedxService
 {
-    protected string $cacheKey = 'redx_access_token';
+    protected string $cacheKey  = 'redx_access_token';
     protected int $cacheMinutes = 50;
     protected string $phone;
     protected string $password;
@@ -22,7 +21,7 @@ class RedxService
         ]);
 
         // Load from config
-        $this->phone = config('courier-fraud-checker-bd.redx.phone');
+        $this->phone    = config('courier-fraud-checker-bd.redx.phone');
         $this->password = config('courier-fraud-checker-bd.redx.password');
 
         CourierFraudCheckerHelper::validatePhoneNumber($this->phone);
@@ -39,13 +38,13 @@ class RedxService
         // Request new token from RedX
         $response = Http::withHeaders([
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept' => 'application/json, text/plain, */*',
+            'Accept'     => 'application/json, text/plain, */*',
         ])->post('https://api.redx.com.bd/v4/auth/login', [
-            'phone' => '88' . $this->phone,
+            'phone'    => '88' . $this->phone,
             'password' => $this->password,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -63,14 +62,14 @@ class RedxService
 
         $accessToken = $this->getAccessToken();
 
-        if (!$accessToken) {
+        if (! $accessToken) {
             return ['error' => 'Login failed or unable to get access token'];
         }
 
         $response = Http::withHeaders([
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept' => 'application/json, text/plain, */*',
-            'Content-Type' => 'application/json',
+            'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            'Accept'        => 'application/json, text/plain, */*',
+            'Content-Type'  => 'application/json',
             'Authorization' => 'Bearer ' . $accessToken,
         ])->get("https://redx.com.bd/api/redx_se/admin/parcel/customer-success-return-rate?phoneNumber=88{$queryPhone}");
 
@@ -78,11 +77,11 @@ class RedxService
             $object = $response->json();
 
             return [
-                'success' => (int)($object['data']['deliveredParcels'] ?? 0),
-                'cancel' => isset($object['data']['totalParcels'], $object['data']['deliveredParcels'])
-                    ? ((int)$object['data']['totalParcels'] - (int)$object['data']['deliveredParcels'])
+                'success' => (int) ($object['data']['deliveredParcels'] ?? 0),
+                'cancel'  => isset($object['data']['totalParcels'], $object['data']['deliveredParcels'])
+                    ? ((int) $object['data']['totalParcels'] - (int) $object['data']['deliveredParcels'])
                     : 0,
-                'total' => (int)($object['data']['totalParcels'] ?? 0),
+                'total'   => (int) ($object['data']['totalParcels'] ?? 0),
             ];
         } elseif ($response->status() === 401) {
             Cache::forget($this->cacheKey);
@@ -91,10 +90,8 @@ class RedxService
 
         return [
             'success' => 'Threshold hit, wait a minute',
-            'cancel' => 'Threshold hit, wait a minute',
-            'total' => 'Threshold hit, wait a minute',
+            'cancel'  => 'Threshold hit, wait a minute',
+            'total'   => 'Threshold hit, wait a minute',
         ];
     }
 }
-
-?>
