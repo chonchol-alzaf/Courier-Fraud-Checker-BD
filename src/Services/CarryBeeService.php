@@ -2,15 +2,24 @@
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
 use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
-use Illuminate\Support\Facades\Cache;
+use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
+use Alzaf\CourierFraudCheckerBd\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CarryBeeService
 {
-    protected string $cacheKey  = 'carrybee_access_token';
-    protected int $cacheMinutes = 50;
+    use ApiTokenManager;
+
     protected string $phone;
     protected string $password;
+
+    protected string $tokenCacheKey = 'courier_fraud_checker_bd:carrybee_token';
+
+    protected const LOGIN_URL   = 'https://api-merchant.carrybee.com/api/v2/login';
+    protected const SUCCESS_URL = 'https://api-merchant.carrybee.com/api/v2/businesses/15069/fraud-check/';
+
+    // TODO: business id dynamic fetch korte hobe
 
     public function __construct()
     {
@@ -27,44 +36,26 @@ class CarryBeeService
         CourierFraudCheckerHelper::validatePhoneNumber($this->phone);
     }
 
-    private function getAccessToken()
+    protected function requestNewToken(): ?string
     {
-        $accessToken = Cache::get($this->cacheKey);
-        if ($accessToken) {
-            return $accessToken;
-        }
-
-        $login_response = Http::post("https://api-merchant.carrybee.com/api/v2/login", [
+        $response = Http::timeout(10)->post(self::LOGIN_URL, [
             'phone'    => '+88' . $this->phone,
             'password' => $this->password,
         ]);
 
-        $accessToken = data_get($login_response->json(), 'data.accessToken');
-        if ($accessToken) {
-            Cache::put($this->cacheKey, $accessToken, now()->addMinutes($this->cacheMinutes));
+        if (! $response->successful()) {
+            return null;
         }
 
-        return $accessToken;
+        return data_get($response->json(), 'data.accessToken');
     }
 
-    public function getCustomerDeliveryStats(string $queryPhone)
+    public function getCustomerDeliveryStats(string $phoneNumber)
     {
-        CourierFraudCheckerHelper::validatePhoneNumber($queryPhone);
+        $response = $this->requestWithToken(function ($token) use ($phoneNumber) {
 
-        $response = retry(2, function () use ($queryPhone) {
-
-            $accessToken = $this->getAccessToken();
-
-            $response = Http::withToken($accessToken)
-                ->get("https://api-merchant.carrybee.com/api/v2/businesses/15069/fraud-check/{$queryPhone}");
-
-            if ($response->status() === 401) {
-                Cache::forget($this->cacheKey);
-                throw new \Exception("Token expired");
-            }
-
-            return $response;
-
+            return Http::withToken($token)
+                ->get(self::SUCCESS_URL . $phoneNumber);
         });
 
         $data = data_get($response->json(), 'data');
@@ -72,13 +63,11 @@ class CarryBeeService
         $total   = $data['total_order'] ?? 0;
         $cancel  = $data['cancelled_order'] ?? 0;
         $success = $total + $cancel;
-        $result  = [
-            'total'   => $data['total_order'] ?? 0,
-            'cancel'  => $data['cancelled_order'] ?? 0,
-            'success' => $success,
-        ];
 
-        return $result;
+        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
 
+        return array_merge([
+            'data_type' => 'delivery',
+        ], $stats);
     }
 }

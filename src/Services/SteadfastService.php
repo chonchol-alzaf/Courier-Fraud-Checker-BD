@@ -2,13 +2,17 @@
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
 use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
+use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SteadfastService
 {
     protected string $email;
     protected string $password;
+
+    protected const LOGIN_PAGE = 'https://steadfast.com.bd/login';
+    protected const LOGIN_URL  = 'https://steadfast.com.bd/login';
 
     public function __construct()
     {
@@ -21,90 +25,59 @@ class SteadfastService
         $this->password = config('courier-fraud-checker-bd.steadfast.password');
     }
 
-    public function getCustomerDeliveryStats($phoneNumber)
+    public function getCustomerDeliveryStats(string $phoneNumber): array
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
-        // Step 1: Fetch login page
-        $response = Http::get('https://steadfast.com.bd/login');
+        $cookieJar = new CookieJar();
 
-        // Extract CSRF token
-        preg_match('/<input type="hidden" name="_token" value="(.*?)"/', $response->body(), $matches);
-        $token = $matches[1] ?? null;
+        $client = Http::withOptions([
+            'cookies' => $cookieJar,
+        ]);
 
-        if (! $token) {
+        // Step 1: login page
+        $response = $client->get(self::LOGIN_PAGE);
+
+        preg_match('/name="_token" value="(.*?)"/', $response->body(), $matches);
+        $csrf = $matches[1] ?? null;
+
+        if (! $csrf) {
             return ['error' => 'CSRF token not found'];
         }
 
-        // Convert CookieJar to array
-        $rawCookies   = $response->cookies();
-        $cookiesArray = [];
-        foreach ($rawCookies->toArray() as $cookie) {
-            $cookiesArray[$cookie['Name']] = $cookie['Value'];
+        // Step 2: login
+        $login = $client->asForm()->post(self::LOGIN_URL, [
+            '_token'   => $csrf,
+            'email'    => $this->email,
+            'password' => $this->password,
+        ]);
+
+        if (! $login->successful() && ! $login->redirect()) {
+            return ['error' => 'Login failed'];
         }
 
-        // Step 2: Log in
-        $loginResponse = Http::withCookies($cookiesArray, 'steadfast.com.bd')
-            ->asForm()
-            ->post('https://steadfast.com.bd/login', [
-                '_token'   => $token,
-                'email'    => $this->email,
-                'password' => $this->password,
-            ]);
+        // Step 3: main fraud endpoint
+        $result = $client->get("https://steadfast.com.bd/user/frauds/check/{$phoneNumber}");
 
-        if (! ($loginResponse->successful() || $loginResponse->redirect())) {
-            return ['error' => 'Login to Steadfast failed'];
-        }
+        if (! $result->successful()) {
 
-        // Rebuild cookies after login
-        $loginCookiesArray = [];
-        foreach ($loginResponse->cookies()->toArray() as $cookie) {
-            $loginCookiesArray[$cookie['Name']] = $cookie['Value'];
-        }
+            // fallback endpoint
+            $result = $client->get("https://steadfast.com.bd/user/consignment/getbyphone/{$phoneNumber}");
 
-        // Step 3: Access fraud data
-        $resultResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
-            ->get("https://steadfast.com.bd/user/frauds/check/{$phoneNumber}");
-
-        if (! $resultResponse->successful()) {
-
-            $resultResponse = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
-                ->get("https://steadfast.com.bd/user/consignment/getbyphone/{$phoneNumber}");
-
-            if (! $resultResponse->successful()) {
-
-                Log::error($resultResponse->collect()->toArray());
-                return ['error' => 'Failed to fetch fraud data from Steadfast'];
+            if (! $result->successful()) {
+                return ['error' => 'Failed to fetch fraud data'];
             }
         }
 
-        $object = $resultResponse->collect()->toArray();
+        $data = $result->json();
 
-        $result = [
-            'success' => $object['total_delivered'] ?? 0,
-            'cancel'  => $object['total_cancelled'] ?? 0,
-            'total'   => ($object['total_delivered'] ?? 0) + ($object['total_cancelled'] ?? 0),
-            'frauds'  => $object['frauds'] ?? 0,
-        ];
+        $success = (int) ($data['total_delivered'] ?? 0);
+        $cancel  = (int) ($data['total_cancelled'] ?? 0);
 
-        // Step 4: Logout
-        $logoutGET = Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
-            ->get('https://steadfast.com.bd/user/frauds/check');
+        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
 
-        if ($logoutGET->successful()) {
-            $html = $logoutGET->body();
-
-            if (preg_match('/<meta name="csrf-token" content="(.*?)"/', $html, $matches)) {
-                $csrfToken = $matches[1];
-
-                Http::withCookies($loginCookiesArray, 'steadfast.com.bd')
-                    ->asForm()
-                    ->post('https://steadfast.com.bd/logout', [
-                        '_token' => $csrfToken,
-                    ]);
-            }
-        }
-
-        return $result;
+        return array_merge([
+            'data_type' => 'delivery',
+        ], $stats);
     }
 }

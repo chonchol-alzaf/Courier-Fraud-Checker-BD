@@ -2,98 +2,104 @@
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
 use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
-use Illuminate\Support\Facades\Cache;
+use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
+use Alzaf\CourierFraudCheckerBd\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
 
 class RedxService
 {
-    protected string $cacheKey  = 'redx_access_token';
-    protected int $cacheMinutes = 50;
+    use ApiTokenManager;
+
+    protected string $tokenCacheKey  = 'courier_fraud_checker_bd:redx_token';
+    protected int $tokenCacheMinutes = 50;
+
     protected string $phone;
     protected string $password;
 
+    protected const LOGIN_URL = 'https://api.redx.com.bd/v4/auth/login';
+    protected const STATS_URL = 'https://redx.com.bd/api/redx_se/admin/parcel/customer-success-return-rate';
+
     public function __construct()
     {
-        // Validate config presence
         CourierFraudCheckerHelper::checkRequiredConfig([
             'courier-fraud-checker-bd.redx.phone',
             'courier-fraud-checker-bd.redx.password',
         ]);
 
-        // Load from config
         $this->phone    = config('courier-fraud-checker-bd.redx.phone');
         $this->password = config('courier-fraud-checker-bd.redx.password');
 
         CourierFraudCheckerHelper::validatePhoneNumber($this->phone);
     }
 
-    protected function getAccessToken()
+    /**
+     * Trait required method
+     */
+    protected function requestNewToken(): ?string
     {
-        // Use cached token if available
-        $token = Cache::get($this->cacheKey);
-        if ($token) {
-            return $token;
-        }
-
-        // Request new token from RedX
-        $response = Http::withHeaders([
-            'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept'     => 'application/json, text/plain, */*',
-        ])->post('https://api.redx.com.bd/v4/auth/login', [
-            'phone'    => '88' . $this->phone,
-            'password' => $this->password,
-        ]);
+        $response = Http::timeout(10)
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'Accept'     => 'application/json, text/plain, */*',
+            ])
+            ->post(self::LOGIN_URL, [
+                'phone'    => '88' . $this->phone,
+                'password' => $this->password,
+            ]);
 
         if (! $response->successful()) {
             return null;
         }
 
-        $token = $response->json('data.accessToken');
-        if ($token) {
-            Cache::put($this->cacheKey, $token, now()->addMinutes($this->cacheMinutes));
-        }
-
-        return $token;
+        return data_get($response->json(), 'data.accessToken');
     }
 
-    public function getCustomerDeliveryStats(string $queryPhone)
+    public function getCustomerDeliveryStats(string $queryPhone): array
     {
         CourierFraudCheckerHelper::validatePhoneNumber($queryPhone);
 
-        $accessToken = $this->getAccessToken();
+        try {
 
-        if (! $accessToken) {
-            return ['error' => 'Login failed or unable to get access token'];
-        }
+            $response = $this->requestWithToken(function ($token) use ($queryPhone) {
 
-        $response = Http::withHeaders([
-            'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'Accept'        => 'application/json, text/plain, */*',
-            'Content-Type'  => 'application/json',
-            'Authorization' => 'Bearer ' . $accessToken,
-        ])->get("https://redx.com.bd/api/redx_se/admin/parcel/customer-success-return-rate?phoneNumber=88{$queryPhone}");
+                return Http::timeout(10)
+                    ->withHeaders([
+                        'User-Agent'   => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Accept'       => 'application/json, text/plain, */*',
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->withToken($token)
+                    ->get(self::STATS_URL, [
+                        'phoneNumber' => '88' . $queryPhone,
+                    ]);
 
-        if ($response->successful()) {
-            $object = $response->json('data');
+            });
 
-            $success = (int) ($object['deliveredParcels'] ?? 0);
-            $total   = (int) ($object['totalParcels'] ?? 0);
-
+        } catch (\Throwable $e) {
             return [
-                'data_type' => 'delivery',
-                'success'   => $success,
-                'cancel'    => $total - $success,
-                'total'     => $total,
+                'error'   => 1,
+                'success' => 'Threshold hit, wait a minute',
+                'cancel'  => 'Threshold hit, wait a minute',
+                'total'   => 'Threshold hit, wait a minute',
             ];
-        } elseif ($response->status() === 401) {
-            Cache::forget($this->cacheKey);
-            return ['error' => 'Access token expired or invalid. Please retry.', 'status' => 401];
         }
 
-        return [
-            'success' => 'Threshold hit, wait a minute',
-            'cancel'  => 'Threshold hit, wait a minute',
-            'total'   => 'Threshold hit, wait a minute',
-        ];
+        if (! $response->successful()) {
+            return [
+                'error'  => 'Failed to retrieve customer data',
+                'status' => $response->status(),
+            ];
+        }
+
+        $object = $response->json('data');
+
+        $success = (int) ($object['deliveredParcels'] ?? 0);
+        $total   = (int) ($object['totalParcels'] ?? 0);
+
+        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
+
+        return array_merge([
+            'data_type' => 'delivery',
+        ], $stats);
     }
 }

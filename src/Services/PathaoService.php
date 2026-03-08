@@ -2,12 +2,17 @@
 namespace Alzaf\CourierFraudCheckerBd\Services;
 
 use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudCheckerBd\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
 
 class PathaoService
 {
+    use ApiTokenManager;
+
     protected string $username;
     protected string $password;
+
+    protected string $tokenCacheKey = 'courier_fraud_checker_bd:pathao_token';
 
     protected const LOGIN_URL   = 'https://merchant.pathao.com/api/v1/login';
     protected const SUCCESS_URL = 'https://merchant.pathao.com/api/v1/user/success';
@@ -30,7 +35,7 @@ class PathaoService
         ],
         'risky_customer'     => [
             'rating'       => 'risky_customer',
-            'risk_level'   => 'high',
+            'risk_level'   => 'very high',
             'success_rate' => 30,
         ],
         'new_customer'       => [
@@ -51,29 +56,30 @@ class PathaoService
         $this->password = config('courier-fraud-checker-bd.pathao.password');
     }
 
-    public function getCustomerDeliveryStats(string $phoneNumber): array
+    protected function requestNewToken(): ?string
     {
-        CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
-
-        $token = $this->getAccessToken();
-
-        if (! $token) {
-            return ['error' => 'Failed to authenticate with Pathao'];
-        }
-
-        $response = Http::timeout(10)
-            ->withToken($token)
-            ->post(self::SUCCESS_URL, [
-                'phone'      => $phoneNumber,
-                'show_count' => true,
-            ]);
+        $response = Http::timeout(10)->post(self::LOGIN_URL, [
+            'username' => $this->username,
+            'password' => $this->password,
+        ]);
 
         if (! $response->successful()) {
-            return [
-                'error'  => 'Failed to retrieve customer data',
-                'status' => $response->status(),
-            ];
+            return null;
         }
+
+        return data_get($response->json(), 'access_token');
+    }
+
+    public function getCustomerDeliveryStats(string $phoneNumber)
+    {
+        $response = $this->requestWithToken(function ($token) use ($phoneNumber) {
+
+            return Http::withToken($token)
+                ->post(self::SUCCESS_URL, [
+                    'phone'      => $phoneNumber,
+                    'show_count' => true,
+                ]);
+        });
 
         $rating = data_get($response->json(), 'data.customer_rating');
 
@@ -87,17 +93,4 @@ class PathaoService
         );
     }
 
-    private function getAccessToken(): ?string
-    {
-        $response = Http::timeout(10)->post(self::LOGIN_URL, [
-            'username' => $this->username,
-            'password' => $this->password,
-        ]);
-
-        if (! $response->successful()) {
-            return null;
-        }
-
-        return trim(data_get($response->json(), 'access_token'));
-    }
 }
