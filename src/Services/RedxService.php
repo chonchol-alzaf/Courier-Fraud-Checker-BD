@@ -77,12 +77,13 @@ class RedxService
             $object = $response->json('data');
 
             $success = (int) ($object['deliveredParcels'] ?? 0);
-            $total  = (int) ($object['totalParcels'] ?? 0);
+            $total   = (int) ($object['totalParcels'] ?? 0);
 
             return [
-                'success' => $success,
-                'cancel'  => $total - $success,
-                'total'   => $total,
+                'data_type' => 'delivery',
+                'success'   => $success,
+                'cancel'    => $total - $success,
+                'total'     => $total,
             ];
         } elseif ($response->status() === 401) {
             Cache::forget($this->cacheKey);

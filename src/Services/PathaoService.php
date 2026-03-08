@@ -9,6 +9,37 @@ class PathaoService
     protected string $username;
     protected string $password;
 
+    protected const LOGIN_URL   = 'https://merchant.pathao.com/api/v1/login';
+    protected const SUCCESS_URL = 'https://merchant.pathao.com/api/v1/user/success';
+
+    protected array $customerRating = [
+        'excellent_customer' => [
+            'rating'       => 'excellent_customer',
+            'risk_level'   => 'low',
+            'success_rate' => 95,
+        ],
+        'good_customer'      => [
+            'rating'       => 'good_customer',
+            'risk_level'   => 'low',
+            'success_rate' => 85,
+        ],
+        'moderate_customer'  => [
+            'rating'       => 'moderate_customer',
+            'risk_level'   => 'medium',
+            'success_rate' => 70,
+        ],
+        'risky_customer'     => [
+            'rating'       => 'risky_customer',
+            'risk_level'   => 'high',
+            'success_rate' => 30,
+        ],
+        'new_customer'       => [
+            'rating'       => 'new_customer',
+            'risk_level'   => 'unknown',
+            'success_rate' => null,
+        ],
+    ];
+
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
@@ -20,42 +51,53 @@ class PathaoService
         $this->password = config('courier-fraud-checker-bd.pathao.password');
     }
 
-    public function getCustomerDeliveryStats($phoneNumber)
+    public function getCustomerDeliveryStats(string $phoneNumber): array
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
-        $response = Http::post('https://merchant.pathao.com/api/v1/login', [
+        $token = $this->getAccessToken();
+
+        if (! $token) {
+            return ['error' => 'Failed to authenticate with Pathao'];
+        }
+
+        $response = Http::timeout(10)
+            ->withToken($token)
+            ->post(self::SUCCESS_URL, [
+                'phone'      => $phoneNumber,
+                'show_count' => true,
+            ]);
+
+        if (! $response->successful()) {
+            return [
+                'error'  => 'Failed to retrieve customer data',
+                'status' => $response->status(),
+            ];
+        }
+
+        $rating = data_get($response->json(), 'data.customer_rating');
+
+        if (! $rating || ! isset($this->customerRating[$rating])) {
+            return ['error' => 'Invalid customer rating received'];
+        }
+
+        return array_merge(
+            ['data_type' => 'rating'],
+            $this->customerRating[$rating]
+        );
+    }
+
+    private function getAccessToken(): ?string
+    {
+        $response = Http::timeout(10)->post(self::LOGIN_URL, [
             'username' => $this->username,
             'password' => $this->password,
         ]);
 
         if (! $response->successful()) {
-            return ['error' => 'Failed to authenticate with Pathao'];
+            return null;
         }
 
-        $data        = $response->json();
-        $accessToken = trim($data['access_token'] ?? '');
-
-        if (! $accessToken) {
-            return ['error' => 'No access token received from Pathao'];
-        }
-
-        $resultResponse = Http::withHeaders([
-            'Content-Type'  => 'application/json',
-            'Authorization' => 'Bearer ' . $accessToken,
-        ])->post('https://merchant.pathao.com/api/v1/user/success', [
-            'phone'      => $phoneNumber,
-            'show_count' => true,
-        ]);
-
-        if (! $resultResponse->successful()) {
-            return ['error' => 'Failed to retrieve customer data', 'status' => $resultResponse->status()];
-        }
-
-        $object = $resultResponse->json('data');
-
-        return [
-            'customer_rating' => $object['customer_rating'] ?? "new_customer",
-        ];
+        return trim(data_get($response->json(), 'access_token'));
     }
 }
