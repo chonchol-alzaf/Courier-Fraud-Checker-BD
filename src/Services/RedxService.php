@@ -91,12 +91,13 @@ class RedxService
             ];
         }
 
-        $object = $response->json('data');
+        $object = $response->json('data') ?? [];
 
         $success = (int) ($object['deliveredParcels'] ?? 0);
         $total   = (int) ($object['totalParcels'] ?? 0);
+        $cancel  = max($total - $success, 0);
 
-        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
+        $stats = DeliveryStatsCalculator::calculate($success, $cancel);
 
         return array_merge([
             'data_type' => 'delivery',

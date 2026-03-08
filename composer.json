@@ -1,8 +1,8 @@
 {
     "name": "alzaf/courier-fraud-checker-bd",
-    "description": "A fraud detection tool for e-commerce platforms to analyze customer order behavior across Steadfast and Pathao couriers.",
+    "description": "A fraud detection tool for e-commerce platforms to analyze customer order behavior across Steadfast, Pathao, Redx, and CarryBee couriers.",
     "type": "library",
-    "license": "GPL-3.0",
+    "license": "GPL-3.0-only",
     "keywords": [
         "fraud detection",
         "e-commerce",

@@ -1,6 +1,6 @@
 # Courier Fraud Checker BD for Laravel
 
-A Laravel package to detect potential fraudulent orders by checking customer delivery behavior through Pathao and Steadfast courier services in Bangladesh.
+A Laravel package to detect potential fraudulent orders by checking customer delivery behavior through Pathao, Steadfast, Redx, and CarryBee courier services in Bangladesh.
 
 ---
 
@@ -9,7 +9,7 @@ A Laravel package to detect potential fraudulent orders by checking customer del
 - Check customer delivery history across multiple couriers
 - Validate Bangladeshi phone numbers
 - Get success/cancel/total delivery statistics
-- Supports both Pathao and Steadfast courier services
+- Supports Pathao, Steadfast, Redx, and CarryBee courier services
 
 ---
 
@@ -46,7 +46,7 @@ In `config/app.php`:
 
 ```php
 'providers' => [
-    Alzaf\CourierFraudCheckerBd\Providers\CourierFraudCheckerBdServiceProvider::class,
+    Alzaf\CourierFraudCheckerBd\Providers\CourierFraudCheckerProvider::class,
 ],
 ```
 
@@ -55,6 +55,12 @@ In `config/app.php`:
 Add these environment variables to your `.env` file:
 
 ```env
+# Enable/Disable Couriers
+PATHAO_ENABLE=true
+STEADFAST_ENABLE=true
+REDX_ENABLE=false
+CARRYBEE_ENABLE=false
+
 # Pathao Credentials
 PATHAO_USER=your_pathao_email
 PATHAO_PASSWORD=your_pathao_password
@@ -62,6 +68,15 @@ PATHAO_PASSWORD=your_pathao_password
 # Steadfast Credentials
 STEADFAST_USER=your_steadfast_email
 STEADFAST_PASSWORD=your_steadfast_password
+
+# Redx Credentials
+REDX_PHONE=01XXXXXXXXX
+REDX_PASSWORD=your_redx_password
+
+# CarryBee Credentials
+CARRYBEE_PHONE=01XXXXXXXXX
+CARRYBEE_PASSWORD=your_carrybee_password
+CARRYBEE_BUSINESS_ID=your_business_id
 ```
 
 ---
@@ -71,9 +86,9 @@ STEADFAST_PASSWORD=your_steadfast_password
 ### Basic Usage
 
 ```php
-use Alzaf\CourierFraudCheckerBd\Facades\CourierFraudCheckerBdFacade;
+use Alzaf\CourierFraudCheckerBd\Facades\CourierFraudChecker;
 
-$result = CourierFraudCheckerBdFacade::check('01641377742');
+$result = CourierFraudChecker::check('01641377742');
 
 print_r($result);
 ```
@@ -118,8 +133,8 @@ The package automatically validates phone numbers with this regex:
 use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
 use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
 
-$pathao = (new PathaoService())->pathao('01742263748');
-$steadfast = (new SteadfastService())->steadfast('01742263748');
+$pathao = (new PathaoService())->getCustomerDeliveryStats('01742263748');
+$steadfast = (new SteadfastService())->getCustomerDeliveryStats('01742263748');
 ```
 
 ### Custom Validation Rules
@@ -148,7 +163,7 @@ CourierFraudCheckerHelper::validatePhoneNumber('01742263748');
 
 ## 📝 License
 
-This package is open-source software licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://opensource.org/licenses/GPL-3.0).
+This package is open-source software licensed under the [GNU General Public License v3.0 only (GPL-3.0-only)](https://opensource.org/license/gpl-3-0/).
 
 Under this license:
 
@@ -156,7 +171,7 @@ Under this license:
 
 - Use the package for personal or commercial projects.
 - Modify the source code for your own use.
-- Distribute the modified or original source code **provided** you also license it under **GPL-3.0**.
+- Distribute the modified or original source code **provided** you also license it under **GPL-3.0-only**.
 - Study and learn from the source code freely.
 
 ❌ **You are NOT allowed to:**
@@ -166,8 +181,8 @@ Under this license:
 - Sub-license or sell the software under a restrictive license.
 
 **Important:**  
-If you distribute modified versions of this package, you must also release your changes under the GPL-3.0 license and include the original copyright.
+If you distribute modified versions of this package, you must also release your changes under the GPL-3.0-only license and include the original copyright.
 
-> GPL-3.0 promotes **freedom** to use, share, and modify, but ensures that any distributed version remains **free and open-source**.
+> GPL-3.0-only promotes **freedom** to use, share, and modify, but ensures that any distributed version remains **free and open-source**.
 
 ---

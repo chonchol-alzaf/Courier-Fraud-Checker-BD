@@ -5,7 +5,6 @@ use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
 use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
 use Alzaf\CourierFraudCheckerBd\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class CarryBeeService
 {
@@ -17,9 +16,9 @@ class CarryBeeService
     protected string $tokenCacheKey = 'courier_fraud_checker_bd:carrybee_token';
 
     protected const LOGIN_URL   = 'https://api-merchant.carrybee.com/api/v2/login';
-    protected const SUCCESS_URL = 'https://api-merchant.carrybee.com/api/v2/businesses/15069/fraud-check/';
 
-    // TODO: business id dynamic fetch korte hobe
+    protected string $successUrl;
+
 
     public function __construct()
     {
@@ -27,11 +26,16 @@ class CarryBeeService
         CourierFraudCheckerHelper::checkRequiredConfig([
             'courier-fraud-checker-bd.carrybee.phone',
             'courier-fraud-checker-bd.carrybee.password',
+            'courier-fraud-checker-bd.carrybee.business_id',
         ]);
 
         // Load from config
         $this->phone    = config('courier-fraud-checker-bd.carrybee.phone');
         $this->password = config('courier-fraud-checker-bd.carrybee.password');
+
+        $businessId = config('courier-fraud-checker-bd.carrybee.business_id');
+
+        $this->successUrl = "https://api-merchant.carrybee.com/api/v2/businesses/{$businessId}/fraud-check/";
 
         CourierFraudCheckerHelper::validatePhoneNumber($this->phone);
     }
@@ -52,19 +56,30 @@ class CarryBeeService
 
     public function getCustomerDeliveryStats(string $phoneNumber)
     {
+        CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
+
         $response = $this->requestWithToken(function ($token) use ($phoneNumber) {
 
             return Http::withToken($token)
-                ->get(self::SUCCESS_URL . $phoneNumber);
+                ->get($this->successUrl . $phoneNumber);
         });
+
+        if (! $response->successful()) {
+            return [
+                'error'  => 'Failed to retrieve customer data',
+                'status' => $response->status(),
+            ];
+        }
 
         $data = data_get($response->json(), 'data');
 
-        $total   = $data['total_order'] ?? 0;
-        $cancel  = $data['cancelled_order'] ?? 0;
-        $success = $total + $cancel;
+        $total  = (int) ($data['total_order'] ?? 0);
+        $cancel = (int) ($data['cancelled_order'] ?? 0);
+        $cancel = max(0, min($cancel, $total));
 
-        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
+        $success = max($total - $cancel, 0);
+
+        $stats = DeliveryStatsCalculator::calculate($success, $cancel);
 
         return array_merge([
             'data_type' => 'delivery',
