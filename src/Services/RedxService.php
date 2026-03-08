@@ -5,6 +5,7 @@ use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
 use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
 use Alzaf\CourierFraudCheckerBd\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
+use Shope\Core\Exceptions\CustomException;
 
 class RedxService
 {
@@ -58,37 +59,23 @@ class RedxService
     {
         CourierFraudCheckerHelper::validatePhoneNumber($queryPhone);
 
-        try {
+        $response = $this->requestWithToken(function ($token) use ($queryPhone) {
 
-            $response = $this->requestWithToken(function ($token) use ($queryPhone) {
+            return Http::timeout(10)
+                ->withHeaders([
+                    'User-Agent'   => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    'Accept'       => 'application/json, text/plain, */*',
+                    'Content-Type' => 'application/json',
+                ])
+                ->withToken($token)
+                ->get(self::STATS_URL, [
+                    'phoneNumber' => '88' . $queryPhone,
+                ]);
 
-                return Http::timeout(10)
-                    ->withHeaders([
-                        'User-Agent'   => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                        'Accept'       => 'application/json, text/plain, */*',
-                        'Content-Type' => 'application/json',
-                    ])
-                    ->withToken($token)
-                    ->get(self::STATS_URL, [
-                        'phoneNumber' => '88' . $queryPhone,
-                    ]);
-
-            });
-
-        } catch (\Throwable $e) {
-            return [
-                'error'   => 1,
-                'success' => 'Threshold hit, wait a minute',
-                'cancel'  => 'Threshold hit, wait a minute',
-                'total'   => 'Threshold hit, wait a minute',
-            ];
-        }
+        });
 
         if (! $response->successful()) {
-            return [
-                'error'  => 'Failed to retrieve customer data',
-                'status' => $response->status(),
-            ];
+            throw new CustomException("Failed to retrieve customer data", 500);
         }
 
         $object = $response->json('data') ?? [];
