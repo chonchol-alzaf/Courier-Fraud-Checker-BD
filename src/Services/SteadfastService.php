@@ -21,7 +21,7 @@ class SteadfastService
         $this->password = config('courier-fraud-checker-bd.steadfast.password');
     }
 
-    public function steadfast($phoneNumber)
+    public function getCustomerDeliveryStats($phoneNumber)
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
@@ -80,12 +80,11 @@ class SteadfastService
 
         $object = $resultResponse->collect()->toArray();
 
-
         $result = [
             'success' => $object['total_delivered'] ?? 0,
             'cancel'  => $object['total_cancelled'] ?? 0,
             'total'   => ($object['total_delivered'] ?? 0) + ($object['total_cancelled'] ?? 0),
-            'frauds' => $object['frauds'] ?? 0
+            'frauds'  => $object['frauds'] ?? 0,
         ];
 
         // Step 4: Logout

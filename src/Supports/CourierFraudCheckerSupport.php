@@ -20,12 +20,19 @@ class CourierFraudCheckerSupport
 
     public function check($phoneNumber)
     {
-        return [
-            'steadfast' => $this->steadfastService->steadfast($phoneNumber),
-            'pathao'    => $this->pathaoService->pathao($phoneNumber),
-            'redx'      => $this->redxService->getCustomerDeliveryStats($phoneNumber),
-            'freeFraud' => $this->freeFraudChecker->freeFraud($phoneNumber),
-            // 'carrybee'  => $this->carryBeeService->getCustomerDeliveryStats($phoneNumber),
-        ];
+        $data = [];
+        if (config('courier-fraud-checker-bd.steadfast.enable')) {
+            $data['steadfast'] = $this->steadfastService->getCustomerDeliveryStats($phoneNumber);
+        }
+        if (config('courier-fraud-checker-bd.pathao.enable')) {
+            $data['pathao'] = $this->pathaoService->getCustomerDeliveryStats($phoneNumber);
+        }
+        if (config('courier-fraud-checker-bd.redx.enable')) {
+            $data['redx'] = $this->redxService->getCustomerDeliveryStats($phoneNumber);
+        }
+        if (config('courier-fraud-checker-bd.carrybee.enable')) {
+            $data['carrybee'] = $this->carryBeeService->getCustomerDeliveryStats($phoneNumber);
+        }
+        return $data;
     }
 }

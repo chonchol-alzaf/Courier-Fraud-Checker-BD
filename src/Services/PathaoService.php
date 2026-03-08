@@ -20,7 +20,7 @@ class PathaoService
         $this->password = config('courier-fraud-checker-bd.pathao.password');
     }
 
-    public function pathao($phoneNumber)
+    public function getCustomerDeliveryStats($phoneNumber)
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
