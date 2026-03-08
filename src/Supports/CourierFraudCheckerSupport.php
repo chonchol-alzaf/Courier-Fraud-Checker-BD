@@ -6,6 +6,7 @@ use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
 use Alzaf\CourierFraudCheckerBd\Services\RedxService;
 use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\Facades\Log;
 
 class CourierFraudCheckerSupport
 {
@@ -18,24 +19,32 @@ class CourierFraudCheckerSupport
     {
         $data = [];
         if (config('courier-fraud-checker-bd.steadfast.enable')) {
-            $data['steadfast'] = $this->container
-                ->make(SteadfastService::class)
-                ->getCustomerDeliveryStats($phoneNumber);
+            $data['steadfast'] = $this->safeServiceCall(
+                'steadfast',
+                SteadfastService::class,
+                $phoneNumber
+            );
         }
         if (config('courier-fraud-checker-bd.pathao.enable')) {
-            $data['pathao'] = $this->container
-                ->make(PathaoService::class)
-                ->getCustomerDeliveryStats($phoneNumber);
+            $data['pathao'] = $this->safeServiceCall(
+                'pathao',
+                PathaoService::class,
+                $phoneNumber
+            );
         }
         if (config('courier-fraud-checker-bd.redx.enable')) {
-            $data['redx'] = $this->container
-                ->make(RedxService::class)
-                ->getCustomerDeliveryStats($phoneNumber);
+            $data['redx'] = $this->safeServiceCall(
+                'redx',
+                RedxService::class,
+                $phoneNumber
+            );
         }
         if (config('courier-fraud-checker-bd.carrybee.enable')) {
-            $data['carrybee'] = $this->container
-                ->make(CarryBeeService::class)
-                ->getCustomerDeliveryStats($phoneNumber);
+            $data['carrybee'] = $this->safeServiceCall(
+                'carrybee',
+                CarryBeeService::class,
+                $phoneNumber
+            );
         }
 
         $total   = 0;
@@ -71,5 +80,23 @@ class CourierFraudCheckerSupport
         ];
 
         return $data;
+    }
+
+    protected function safeServiceCall(string $service, string $serviceClass, string $phoneNumber): array
+    {
+        try {
+            return $this->container
+                ->make($serviceClass)
+                ->getCustomerDeliveryStats($phoneNumber);
+        } catch (\Throwable $exception) {
+            Log::warning('Courier service request failed', [
+                'service' => $service,
+                'exception' => $exception,
+            ]);
+
+            return [
+                'error' => 'Unable to fetch data from this courier right now.',
+            ];
+        }
     }
 }
