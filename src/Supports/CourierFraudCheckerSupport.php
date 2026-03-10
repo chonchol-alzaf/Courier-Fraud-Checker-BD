@@ -6,45 +6,29 @@ use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
 use Alzaf\CourierFraudCheckerBd\Services\RedxService;
 use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class CourierFraudCheckerSupport
 {
-    public function __construct(
-        protected Container $container
-    ) {
-    }
+    public function __construct(protected Container $container)
+    {}
 
-    public function check(string $phoneNumber): array
+    public function check(string $phoneNumber, bool $is_disable_cache = true): array
     {
+
         $data = [];
         if (config('courier-fraud-checker-bd.steadfast.enable')) {
-            $data['steadfast'] = $this->safeServiceCall(
-                'steadfast',
-                SteadfastService::class,
-                $phoneNumber
-            );
+            $data['steadfast'] = $this->safeServiceCall('steadfast', SteadfastService::class, $phoneNumber, $is_disable_cache);
         }
         if (config('courier-fraud-checker-bd.pathao.enable')) {
-            $data['pathao'] = $this->safeServiceCall(
-                'pathao',
-                PathaoService::class,
-                $phoneNumber
-            );
+            $data['pathao'] = $this->safeServiceCall('pathao', PathaoService::class, $phoneNumber, $is_disable_cache);
         }
         if (config('courier-fraud-checker-bd.redx.enable')) {
-            $data['redx'] = $this->safeServiceCall(
-                'redx',
-                RedxService::class,
-                $phoneNumber
-            );
+            $data['redx'] = $this->safeServiceCall('redx', RedxService::class, $phoneNumber, $is_disable_cache);
         }
         if (config('courier-fraud-checker-bd.carrybee.enable')) {
-            $data['carrybee'] = $this->safeServiceCall(
-                'carrybee',
-                CarryBeeService::class,
-                $phoneNumber
-            );
+            $data['carrybee'] = $this->safeServiceCall('carrybee', CarryBeeService::class, $phoneNumber, $is_disable_cache);
         }
 
         $total   = 0;
@@ -63,7 +47,7 @@ class CourierFraudCheckerSupport
             }
         }
 
-        $successRate  = $total > 0
+        $successRate = $total > 0
             ? round(($success / $total) * 100, 2)
             : null;
 
@@ -82,16 +66,39 @@ class CourierFraudCheckerSupport
         return $data;
     }
 
-    protected function safeServiceCall(string $service, string $serviceClass, string $phoneNumber): array
+    protected function safeServiceCall(string $service, string $serviceClass, string $phoneNumber, bool $is_disable_cache): array
     {
-        try {
+        $cacheKey       = "courier:{$service}:phone:{$phoneNumber}";
+        $shouldUseCache = ! $is_disable_cache;
+
+        $fetchStats = function () use ($serviceClass, $phoneNumber): array {
             return $this->container
                 ->make($serviceClass)
                 ->getCustomerDeliveryStats($phoneNumber);
+        };
+
+        try {
+            if (! $shouldUseCache) {
+                return $fetchStats();
+            }
+
+            $result = Cache::remember($cacheKey, now()->addDays(5), $fetchStats);
+            if (is_array($result)) {
+                return $result;
+            }
+
+            Cache::forget($cacheKey);
+            throw new \UnexpectedValueException("Invalid response format from {$service}");
+
         } catch (\Throwable $exception) {
+            if ($shouldUseCache) {
+                Cache::forget($cacheKey);
+            }
+
             Log::warning('Courier service request failed', [
-                'service' => $service,
-                'exception' => $exception,
+                'service'   => $service,
+                'exception' => $exception->getMessage(),
+                'type'      => $exception::class,
             ]);
 
             return [
