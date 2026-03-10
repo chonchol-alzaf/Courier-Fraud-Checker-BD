@@ -1,10 +1,10 @@
 <?php
 namespace Alzaf\BdCourier\Supports;
 
+use Alzaf\BdCourier\Services\CarryBeeService;
 use Alzaf\BdCourier\Services\PathaoService;
 use Alzaf\BdCourier\Services\RedxService;
 use Alzaf\BdCourier\Services\SteadfastService;
-use Alzaf\CourierFraudChecker\Services\CarryBeeService;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
