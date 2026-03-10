@@ -1,5 +1,5 @@
 {
-    "name": "alzaf/courier-fraud-checker-bd",
+    "name": "alzaf/bd-courier",
     "description": "A fraud detection tool for e-commerce platforms to analyze customer order behavior across Steadfast, Pathao, Redx, and CarryBee couriers.",
     "type": "library",
     "license": "GPL-3.0-only",
@@ -27,13 +27,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "Alzaf\\CourierFraudCheckerBd\\": "src/"
+            "Alzaf\\CourierFraudChecker\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Alzaf\\CourierFraudCheckerBd\\Providers\\CourierFraudCheckerProvider"
+                "Alzaf\\CourierFraudChecker\\Providers\\CourierFraudCheckerProvider"
             ]
         }
     },

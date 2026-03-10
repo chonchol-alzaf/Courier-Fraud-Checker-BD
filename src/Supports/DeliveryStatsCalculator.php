@@ -1,6 +1,6 @@
 <?php
 
-namespace Alzaf\CourierFraudCheckerBd\Supports;
+namespace Alzaf\CourierFraudChecker\Supports;
 
 class DeliveryStatsCalculator
 {

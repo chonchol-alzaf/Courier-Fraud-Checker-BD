@@ -1,6 +1,6 @@
 <?php
 
-namespace Alzaf\CourierFraudCheckerBd\Traits;
+namespace Alzaf\CourierFraudChecker\Traits;
 
 use Illuminate\Support\Facades\Cache;
 

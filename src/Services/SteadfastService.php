@@ -1,8 +1,8 @@
 <?php
-namespace Alzaf\CourierFraudCheckerBd\Services;
+namespace Alzaf\CourierFraudChecker\Services;
 
-use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
-use Alzaf\CourierFraudCheckerBd\Supports\DeliveryStatsCalculator;
+use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerHelper;
+use Alzaf\CourierFraudChecker\Supports\DeliveryStatsCalculator;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Http;
 

@@ -1,18 +1,17 @@
 <?php
-namespace Alzaf\CourierFraudCheckerBd\Supports;
+namespace Alzaf\CourierFraudChecker\Supports;
 
-use Alzaf\CourierFraudCheckerBd\Services\CarryBeeService;
-use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
-use Alzaf\CourierFraudCheckerBd\Services\RedxService;
-use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
+use Alzaf\CourierFraudChecker\Services\CarryBeeService;
+use Alzaf\CourierFraudChecker\Services\PathaoService;
+use Alzaf\CourierFraudChecker\Services\RedxService;
+use Alzaf\CourierFraudChecker\Services\SteadfastService;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class CourierFraudCheckerSupport
 {
-    public function __construct(protected Container $container)
-    {}
+    public function __construct(protected Container $container) {}
 
     public function check(string $phoneNumber, bool $is_disable_cache = true): array
     {
@@ -92,6 +91,8 @@ class CourierFraudCheckerSupport
             }
 
             $result = $fetchStats();
+
+            
             if (! is_array($result)) {
                 throw new \UnexpectedValueException("Invalid response format from {$service}");
             }
