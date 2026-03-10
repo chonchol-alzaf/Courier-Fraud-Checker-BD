@@ -17,12 +17,12 @@ class SteadfastService
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'courier-fraud-checker-bd.steadfast.user',
-            'courier-fraud-checker-bd.steadfast.password',
+            'courier-fraud-checker.steadfast.user',
+            'courier-fraud-checker.steadfast.password',
         ]);
 
-        $this->email    = config('courier-fraud-checker-bd.steadfast.user');
-        $this->password = config('courier-fraud-checker-bd.steadfast.password');
+        $this->email    = config('courier-fraud-checker.steadfast.user');
+        $this->password = config('courier-fraud-checker.steadfast.password');
     }
 
     public function getCustomerDeliveryStats(string $phoneNumber): array

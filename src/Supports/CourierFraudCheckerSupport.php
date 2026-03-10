@@ -17,16 +17,16 @@ class CourierFraudCheckerSupport
     {
 
         $data = [];
-        if (config('courier-fraud-checker-bd.steadfast.enable')) {
+        if (config('courier-fraud-checker.steadfast.enable')) {
             $data['steadfast'] = $this->safeServiceCall('steadfast', SteadfastService::class, $phoneNumber, $is_disable_cache);
         }
-        if (config('courier-fraud-checker-bd.pathao.enable')) {
+        if (config('courier-fraud-checker.pathao.enable')) {
             $data['pathao'] = $this->safeServiceCall('pathao', PathaoService::class, $phoneNumber, $is_disable_cache);
         }
-        if (config('courier-fraud-checker-bd.redx.enable')) {
+        if (config('courier-fraud-checker.redx.enable')) {
             $data['redx'] = $this->safeServiceCall('redx', RedxService::class, $phoneNumber, $is_disable_cache);
         }
-        if (config('courier-fraud-checker-bd.carrybee.enable')) {
+        if (config('courier-fraud-checker.carrybee.enable')) {
             $data['carrybee'] = $this->safeServiceCall('carrybee', CarryBeeService::class, $phoneNumber, $is_disable_cache);
         }
 

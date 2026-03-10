@@ -24,16 +24,16 @@ class CarryBeeService
     {
         // Validate config presence
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'courier-fraud-checker-bd.carrybee.phone',
-            'courier-fraud-checker-bd.carrybee.password',
-            'courier-fraud-checker-bd.carrybee.business_id',
+            'courier-fraud-checker.carrybee.phone',
+            'courier-fraud-checker.carrybee.password',
+            'courier-fraud-checker.carrybee.business_id',
         ]);
 
         // Load from config
-        $this->phone    = config('courier-fraud-checker-bd.carrybee.phone');
-        $this->password = config('courier-fraud-checker-bd.carrybee.password');
+        $this->phone    = config('courier-fraud-checker.carrybee.phone');
+        $this->password = config('courier-fraud-checker.carrybee.password');
 
-        $businessId = config('courier-fraud-checker-bd.carrybee.business_id');
+        $businessId = config('courier-fraud-checker.carrybee.business_id');
 
         $this->successUrl = "https://api-merchant.carrybee.com/api/v2/businesses/{$businessId}/fraud-check/";
 
