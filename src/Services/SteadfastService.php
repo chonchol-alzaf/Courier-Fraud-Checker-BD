@@ -65,7 +65,7 @@ class SteadfastService
             $result = $client->get("https://steadfast.com.bd/user/consignment/getbyphone/{$phoneNumber}");
 
             if (! $result->successful()) {
-                return ['error' => 'Failed to fetch fraud data'];
+                return ['error' => 'Failed to fetch data'];
             }
         }
 
