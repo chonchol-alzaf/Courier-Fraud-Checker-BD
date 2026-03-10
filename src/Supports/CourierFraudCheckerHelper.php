@@ -1,5 +1,5 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Supports;
+namespace Alzaf\BdCourier\Supports;
 
 use Illuminate\Support\Facades\Validator;
 use InvalidArgumentException;

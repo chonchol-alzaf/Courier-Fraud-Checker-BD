@@ -46,7 +46,7 @@ In `config/app.php`:
 
 ```php
 'providers' => [
-    Alzaf\CourierFraudCheckerBd\Providers\CourierFraudCheckerProvider::class,
+    Alzaf\BdCourierBd\Providers\CourierFraudCheckerProvider::class,
 ],
 ```
 
@@ -86,7 +86,7 @@ CARRYBEE_BUSINESS_ID=your_business_id
 ### Basic Usage
 
 ```php
-use Alzaf\CourierFraudCheckerBd\Facades\CourierFraudChecker;
+use Alzaf\BdCourierBd\Facades\CourierFraudChecker;
 
 $result = CourierFraudChecker::check('01641377742');
 
@@ -130,8 +130,8 @@ The package automatically validates phone numbers with this regex:
 ### Using Individual Services
 
 ```php
-use Alzaf\CourierFraudCheckerBd\Services\PathaoService;
-use Alzaf\CourierFraudCheckerBd\Services\SteadfastService;
+use Alzaf\BdCourierBd\Services\PathaoService;
+use Alzaf\BdCourierBd\Services\SteadfastService;
 
 $pathao = (new PathaoService())->getCustomerDeliveryStats('01742263748');
 $steadfast = (new SteadfastService())->getCustomerDeliveryStats('01742263748');
@@ -140,7 +140,7 @@ $steadfast = (new SteadfastService())->getCustomerDeliveryStats('01742263748');
 ### Custom Validation Rules
 
 ```php
-use Alzaf\CourierFraudCheckerBd\Supports\CourierFraudCheckerHelper;
+use Alzaf\BdCourierBd\Supports\CourierFraudCheckerHelper;
 
 CourierFraudCheckerHelper::validatePhoneNumber('01742263748');
 ```

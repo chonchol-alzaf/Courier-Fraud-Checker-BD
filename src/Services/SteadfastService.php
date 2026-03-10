@@ -1,8 +1,8 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Services;
+namespace Alzaf\BdCourier\Services;
 
-use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerHelper;
-use Alzaf\CourierFraudChecker\Supports\DeliveryStatsCalculator;
+use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
+use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Http;
 
@@ -74,7 +74,7 @@ class SteadfastService
         $success = (int) ($data['total_delivered'] ?? 0);
         $cancel  = (int) ($data['total_cancelled'] ?? 0);
 
-        $stats = DeliveryStatsCalculator::calculate($success,$cancel);
+        $stats = DeliveryStatsCalculator::calculate($success, $cancel);
 
         return array_merge([
             'data_type' => 'delivery',

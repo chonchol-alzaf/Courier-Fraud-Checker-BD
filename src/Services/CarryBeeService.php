@@ -1,9 +1,9 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Services;
+namespace Alzaf\BdCourier\Services;
 
-use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerHelper;
-use Alzaf\CourierFraudChecker\Supports\DeliveryStatsCalculator;
-use Alzaf\CourierFraudChecker\Traits\ApiTokenManager;
+use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
+use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
+use Alzaf\BdCourier\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
 
 class CarryBeeService
@@ -15,10 +15,9 @@ class CarryBeeService
 
     protected string $tokenCacheKey = 'courier_fraud_checker_bd:carrybee_token';
 
-    protected const LOGIN_URL   = 'https://api-merchant.carrybee.com/api/v2/login';
+    protected const LOGIN_URL = 'https://api-merchant.carrybee.com/api/v2/login';
 
     protected string $successUrl;
-
 
     public function __construct()
     {

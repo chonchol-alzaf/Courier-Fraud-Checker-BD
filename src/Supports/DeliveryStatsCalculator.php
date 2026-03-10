@@ -1,6 +1,5 @@
 <?php
-
-namespace Alzaf\CourierFraudChecker\Supports;
+namespace Alzaf\BdCourier\Supports;
 
 class DeliveryStatsCalculator
 {
@@ -13,11 +12,11 @@ class DeliveryStatsCalculator
             : null;
 
         return [
-            'success'       => $success,
-            'cancel'        => $cancel,
-            'total'         => $total,
-            'success_rate'  => $successRate,
-            'risk_level'    => self::calculateRiskLevel($successRate),
+            'success'      => $success,
+            'cancel'       => $cancel,
+            'total'        => $total,
+            'success_rate' => $successRate,
+            'risk_level'   => self::calculateRiskLevel($successRate),
         ];
     }
 

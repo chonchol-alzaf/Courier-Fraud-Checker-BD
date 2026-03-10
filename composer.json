@@ -27,13 +27,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "Alzaf\\CourierFraudChecker\\": "src/"
+            "Alzaf\\BdCourier\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Alzaf\\CourierFraudChecker\\Providers\\CourierFraudCheckerProvider"
+                "Alzaf\\BdCourier\\Providers\\CourierFraudCheckerProvider"
             ]
         }
     },

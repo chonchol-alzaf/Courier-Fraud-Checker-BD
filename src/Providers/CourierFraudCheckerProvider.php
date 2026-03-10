@@ -1,7 +1,7 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Providers;
+namespace Alzaf\BdCourier\Providers;
 
-use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerSupport;
+use Alzaf\BdCourier\Supports\CourierFraudCheckerSupport;
 use Illuminate\Support\ServiceProvider;
 
 class CourierFraudCheckerProvider extends ServiceProvider

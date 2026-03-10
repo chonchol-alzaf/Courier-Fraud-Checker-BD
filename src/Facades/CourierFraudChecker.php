@@ -1,5 +1,5 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Facades;
+namespace Alzaf\BdCourier\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

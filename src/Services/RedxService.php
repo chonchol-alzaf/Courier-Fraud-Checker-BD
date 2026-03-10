@@ -1,9 +1,9 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Services;
+namespace Alzaf\BdCourier\Services;
 
-use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerHelper;
-use Alzaf\CourierFraudChecker\Supports\DeliveryStatsCalculator;
-use Alzaf\CourierFraudChecker\Traits\ApiTokenManager;
+use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
+use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
+use Alzaf\BdCourier\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
 use Shope\Core\Exceptions\CustomException;
 

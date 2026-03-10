@@ -1,8 +1,8 @@
 <?php
-namespace Alzaf\CourierFraudChecker\Services;
+namespace Alzaf\BdCourier\Services;
 
-use Alzaf\CourierFraudChecker\Supports\CourierFraudCheckerHelper;
-use Alzaf\CourierFraudChecker\Traits\ApiTokenManager;
+use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
+use Alzaf\BdCourier\Traits\ApiTokenManager;
 use Illuminate\Support\Facades\Http;
 
 class PathaoService

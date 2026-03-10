@@ -1,6 +1,5 @@
 <?php
-
-namespace Alzaf\CourierFraudChecker\Traits;
+namespace Alzaf\BdCourier\Traits;
 
 use Illuminate\Support\Facades\Cache;
 
@@ -49,7 +48,7 @@ trait ApiTokenManager
 
             $token = $this->getApiToken();
 
-            if (!$token) {
+            if (! $token) {
                 throw new \Exception("Failed to obtain API token");
             }
 
