@@ -82,19 +82,30 @@ class CourierFraudCheckerSupport
                 return $fetchStats();
             }
 
-            $result = Cache::remember($cacheKey, now()->addDays(5), $fetchStats);
-            if (is_array($result)) {
-                return $result;
+            $cachedResult = Cache::get($cacheKey);
+            if (is_array($cachedResult)) {
+                return $cachedResult;
             }
 
-            Cache::forget($cacheKey);
-            throw new \UnexpectedValueException("Invalid response format from {$service}");
-
-        } catch (\Throwable $exception) {
-            if ($shouldUseCache) {
+            if ($cachedResult !== null) {
                 Cache::forget($cacheKey);
             }
 
+            $result = $fetchStats();
+            if (! is_array($result)) {
+                throw new \UnexpectedValueException("Invalid response format from {$service}");
+            }
+
+            // Skip caching transient upstream errors.
+            if (isset($result['error'])) {
+                return $result;
+            }
+
+            Cache::put($cacheKey, $result, $this->resolveServiceCacheTtl($result));
+
+            return $result;
+
+        } catch (\Throwable $exception) {
             Log::warning('Courier service request failed', [
                 'service'   => $service,
                 'exception' => $exception->getMessage(),
@@ -105,5 +116,28 @@ class CourierFraudCheckerSupport
                 'error' => 'Unable to fetch data from this courier right now.',
             ];
         }
+    }
+
+    protected function resolveServiceCacheTtl(array $result): \DateTimeInterface
+    {
+        $total = data_get($result, 'total');
+        if (! is_numeric($total)) {
+            return now()->addMinutes(30);
+        }
+
+        $total = (int) $total;
+        if ($total <= 0) {
+            return now()->addMinutes(15);
+        }
+
+        if ($total < 5) {
+            return now()->addHour();
+        }
+
+        if ($total < 20) {
+            return now()->addHours(10);
+        }
+
+        return now()->addHours(20);
     }
 }
