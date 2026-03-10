@@ -5,6 +5,7 @@ use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SteadfastService
 {
@@ -17,12 +18,12 @@ class SteadfastService
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'courier-fraud-checker.steadfast.user',
-            'courier-fraud-checker.steadfast.password',
+            'bd-courier.steadfast.user',
+            'bd-courier.steadfast.password',
         ]);
 
-        $this->email    = config('courier-fraud-checker.steadfast.user');
-        $this->password = config('courier-fraud-checker.steadfast.password');
+        $this->email    = config('bd-courier.steadfast.user');
+        $this->password = config('bd-courier.steadfast.password');
     }
 
     public function getCustomerDeliveryStats(string $phoneNumber): array
@@ -65,7 +66,7 @@ class SteadfastService
             $result = $client->get("https://steadfast.com.bd/user/consignment/getbyphone/{$phoneNumber}");
 
             if (! $result->successful()) {
-                return ['error' => 'Failed to fetch data'];
+                return ['error' => 'Failed to fetch fraud data'];
             }
         }
 

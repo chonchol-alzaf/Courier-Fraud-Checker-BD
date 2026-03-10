@@ -1,15 +1,15 @@
 <?php
 namespace Alzaf\BdCourier\Supports;
 
-use Alzaf\BdCourier\Services\CarryBeeService;
 use Alzaf\BdCourier\Services\PathaoService;
 use Alzaf\BdCourier\Services\RedxService;
 use Alzaf\BdCourier\Services\SteadfastService;
+use Alzaf\CourierFraudChecker\Services\CarryBeeService;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class CourierFraudCheckerSupport
+class CourierParcelSupport
 {
     public function __construct(protected Container $container)
     {}
@@ -18,7 +18,7 @@ class CourierFraudCheckerSupport
     {
 
         $data = [];
-         if (config('bd-courier.steadfast.enable')) {
+        if (config('bd-courier.steadfast.enable')) {
             $data['steadfast'] = $this->safeServiceCall('steadfast', SteadfastService::class, $phoneNumber, $is_disable_cache);
         }
         if (config('bd-courier.pathao.enable')) {

@@ -48,12 +48,12 @@ class PathaoService
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'courier-fraud-checker.pathao.user',
-            'courier-fraud-checker.pathao.password',
+            'bd-courier.pathao.user',
+            'bd-courier.pathao.password',
         ]);
 
-        $this->username = config('courier-fraud-checker.pathao.user');
-        $this->password = config('courier-fraud-checker.pathao.password');
+        $this->username = config('bd-courier.pathao.user');
+        $this->password = config('bd-courier.pathao.password');
     }
 
     protected function requestNewToken(): ?string

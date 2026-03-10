@@ -23,12 +23,12 @@ class RedxService
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'courier-fraud-checker.redx.phone',
-            'courier-fraud-checker.redx.password',
+            'bd-courier.redx.phone',
+            'bd-courier.redx.password',
         ]);
 
-        $this->phone    = config('courier-fraud-checker.redx.phone');
-        $this->password = config('courier-fraud-checker.redx.password');
+        $this->phone    = config('bd-courier.redx.phone');
+        $this->password = config('bd-courier.redx.password');
 
         CourierFraudCheckerHelper::validatePhoneNumber($this->phone);
     }

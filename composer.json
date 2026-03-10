@@ -33,7 +33,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Alzaf\\BdCourier\\Providers\\CourierFraudCheckerProvider"
+                "Alzaf\\BdCourier\\Providers\\CourierServiceProvider"
             ]
         }
     },

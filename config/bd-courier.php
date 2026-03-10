@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'default_parcel'=> env("DEFAULT_COURIER_PARCEL",'pathao'),
     'pathao'    => [
         'enable'   => env('PATHAO_ENABLE', false),
         'user'     => env('PATHAO_USER'),
