@@ -1,10 +1,10 @@
 <?php
 namespace Alzaf\BdCourier\Supports;
 
-use Alzaf\BdCourier\Services\CarryBeeService;
-use Alzaf\BdCourier\Services\PathaoService;
-use Alzaf\BdCourier\Services\RedxService;
-use Alzaf\BdCourier\Services\SteadfastService;
+use Alzaf\BdCourier\Services\FraudCheck\SteadfastService;
+use Alzaf\BdCourier\Services\FraudCheck\PathaoService;
+use Alzaf\BdCourier\Services\FraudCheck\RedxService;
+use Alzaf\BdCourier\Services\FraudCheck\CarryBeeService;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +18,7 @@ class CourierFraudCheckerSupport
     {
 
         $data = [];
-         if (config('bd-courier.steadfast.enable')) {
+        if (config('bd-courier.steadfast.enable')) {
             $data['steadfast'] = $this->safeServiceCall('steadfast', SteadfastService::class, $phoneNumber, $is_disable_cache);
         }
         if (config('bd-courier.pathao.enable')) {
@@ -47,19 +47,22 @@ class CourierFraudCheckerSupport
             }
         }
 
-        $successRate = $total > 0
-            ? round(($success / $total) * 100, 2)
-            : null;
 
         $cancelRate = $total > 0
             ? round(($cancel / $total) * 100, 2)
             : null;
 
-        $data['totalSummary'] = [
+        $rates = collect($data)
+            ->pluck('success_rate')
+            ->filter(fn($rate) => ! is_null($rate));
+
+        $total_success_rate = $rates->avg();
+
+        $data['totalSummary']  = [
             'total'        => $total,
             'success'      => $success,
             'cancel'       => $cancel,
-            'success_rate' => $successRate,
+            'success_rate' => $total_success_rate,
             'cancel_rate'  => $cancelRate,
         ];
 

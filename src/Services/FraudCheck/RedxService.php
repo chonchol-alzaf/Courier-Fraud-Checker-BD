@@ -1,5 +1,5 @@
 <?php
-namespace Alzaf\BdCourier\Services;
+namespace Alzaf\BdCourier\Services\FraudCheck;
 
 use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
@@ -89,5 +89,10 @@ class RedxService
         return array_merge([
             'data_type' => 'delivery',
         ], $stats);
+    }
+
+    public function add()
+    {
+        
     }
 }
