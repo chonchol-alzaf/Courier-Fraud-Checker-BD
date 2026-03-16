@@ -91,8 +91,4 @@ class RedxService
         ], $stats);
     }
 
-    public function add()
-    {
-        
-    }
 }

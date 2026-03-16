@@ -1,50 +1,61 @@
 <?php
 namespace Alzaf\BdCourier\Supports;
 
-use Alzaf\BdCourier\Services\CarryBeeService;
-use Alzaf\BdCourier\Services\PathaoService;
-use Alzaf\BdCourier\Services\RedxService;
-use Alzaf\BdCourier\Services\SteadfastService;
+use Alzaf\BdCourier\Enums\CourierEnum;
+use Alzaf\BdCourier\Services\Parcel\CarryBeeService;
+use Alzaf\BdCourier\Services\Parcel\PathaoService;
+use Alzaf\BdCourier\Services\Parcel\RedxService;
+use Alzaf\BdCourier\Services\Parcel\SteadfastService;
+use App\Models\PickupPoints;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Log;
 
 class CourierParcelSupport
 {
+    private $services;
     public function __construct(protected Container $container)
-    {}
-
-    public function add(): array
     {
-        $defaultParcel = strtolower((string) config('bd-courier.default_parcel', ''));
-
-        $services = [
-            'pathao'    => PathaoService::class,
-            'redx'      => RedxService::class,
-            'steadfast' => SteadfastService::class,
-            'carrybee'  => CarryBeeService::class,
+        $this->services = [
+            CourierEnum::PATHAO->value    => PathaoService::class,
+            CourierEnum::REDX->value      => RedxService::class,
+            CourierEnum::STEADFAST->value => SteadfastService::class,
+            CourierEnum::CARRYBEE->value  => CarryBeeService::class,
         ];
+    }
 
-        $serviceClass = $services[$defaultParcel] ?? null;
+    public function call(string $courier, string $action, ...$args)
+    {
+        $serviceClass = $this->services[$courier] ?? null;
+        if (! $serviceClass) {
+            return ['error' => "Unsupported courier [{$courier}]"];
+        }
+
+        $service = $this->container->make($serviceClass);
+        $map     = [
+            'createStore' => 'storeCreate',
+            'cityList'        => 'cityList',
+            'zoneList'        => 'zoneList',
+            'areaList'        => 'areaList',
+        ];
+        $method = $map[$action] ?? $action;
+
+        if (! method_exists($service, $method)) {
+            return ['error' => "Method [{$method}] not supported for [{$courier}]"];
+        }
+
+        return $service->{$method}(...$args);
+    }
+
+    public function createStore($courier_name, PickupPoints $pickup_points)
+    {
+        $serviceClass = $this->services[$courier_name] ?? null;
         if (! $serviceClass) {
             return [
-                'error' => "Unsupported default parcel [{$defaultParcel}]",
+                'error' => "Unsupported  courier [{$courier_name}]",
             ];
         }
 
-        try {
-            $result = $this->container->make($serviceClass)->add();
+        return $this->container->make($serviceClass)->storeCreate($pickup_points);
 
-            return is_array($result) ? $result : [];
-        } catch (\Throwable $exception) {
-            Log::warning('Courier parcel add request failed', [
-                'default_parcel' => $defaultParcel,
-                'exception'      => $exception->getMessage(),
-                'type'           => $exception::class,
-            ]);
-
-            return [
-                'error' => 'Unable to add parcel right now.',
-            ];
-        }
     }
 }

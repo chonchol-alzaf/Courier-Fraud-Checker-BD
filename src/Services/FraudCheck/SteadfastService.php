@@ -81,8 +81,4 @@ class SteadfastService
         ], $stats);
     }
 
-    public function add()
-    {
-        
-    }
 }

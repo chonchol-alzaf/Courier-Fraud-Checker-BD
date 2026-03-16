@@ -85,8 +85,4 @@ class CarryBeeService
         ], $stats);
     }
     
-    public function add()
-    {
-        
-    }
 }
