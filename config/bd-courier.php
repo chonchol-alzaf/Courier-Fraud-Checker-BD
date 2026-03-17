@@ -15,9 +15,11 @@ return [
             'client_secret' => env('PATHAO_CLIENT_SECRET', 'wRcaibZkUdSNz2EI9ZyuXLlNrnAv0TdPUPXMnD39'),
         ],
         'incoming' => [
-            'secret_header' => env('PATHAO_WEBHOOK_SECRET_HEADER', env('PATHAO_WEBHOOK_INTEGRATION_HEADER', 'X-Pathao-Merchant-Webhook-Integration-Secret')),
-            'secret'        => env('PATHAO_WEBHOOK_SECRET', env('PATHAO_WEBHOOK_INTEGRATION_SECRET', 'f3992ecc-59da-4cbe-a049-a13da2018d51')),
-            'status_map'    => [
+            'signature_header'    => 'X-PATHAO-Signature',
+            'signature_value'     => env('PATHAO_WEBHOOK_SIGNATURE_VALUE', 'OATpB1Erwy2nBRNbAdEgSumu4Nafis31pQjEeCWLROARE'),
+            'secret_header'       => 'X-Pathao-Merchant-Webhook-Integration-Secret',
+            'secret_header_value' => env('PATHAO_WEBHOOK_INTEGRATION_SECRET', 'f3992ecc-59da-4cbe-a049-a13da2018d51'),
+            'status_map'          => [
                 'assigned_for_pickup'       => OrderStatusEnum::SHIPPING->value,
                 'pickup_requested'          => OrderStatusEnum::SHIPPING->value,
                 'pickup'                    => OrderStatusEnum::SHIPPING->value,
