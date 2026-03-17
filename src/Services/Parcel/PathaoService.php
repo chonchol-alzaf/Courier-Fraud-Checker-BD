@@ -27,18 +27,18 @@ class PathaoService implements CourierServiceInterface
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'bd-courier.pathao.username',
-            'bd-courier.pathao.password',
-            'bd-courier.pathao.base_url',
-            'bd-courier.pathao.client_id',
-            'bd-courier.pathao.client_secret',
+            'bd-courier.pathao.outgoing.username',
+            'bd-courier.pathao.outgoing.password',
+            'bd-courier.pathao.outgoing.base_url',
+            'bd-courier.pathao.outgoing.client_id',
+            'bd-courier.pathao.outgoing.client_secret',
         ]);
 
-        $this->username      = config('bd-courier.pathao.username');
-        $this->password      = config('bd-courier.pathao.password');
-        $this->base_url      = config('bd-courier.pathao.base_url');
-        $this->client_id     = config('bd-courier.pathao.client_id');
-        $this->client_secret = config('bd-courier.pathao.client_secret');
+        $this->username      = config('bd-courier.pathao.outgoing.username');
+        $this->password      = config('bd-courier.pathao.outgoing.password');
+        $this->base_url      = config('bd-courier.pathao.outgoing.base_url');
+        $this->client_id     = config('bd-courier.pathao.outgoing.client_id');
+        $this->client_secret = config('bd-courier.pathao.outgoing.client_secret');
     }
 
     private function issueToken()

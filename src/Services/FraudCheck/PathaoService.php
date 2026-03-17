@@ -49,12 +49,12 @@ class PathaoService implements CourierServiceInterface
     public function __construct()
     {
         CourierFraudCheckerHelper::checkRequiredConfig([
-            'bd-courier.pathao.username',
-            'bd-courier.pathao.password',
+            'bd-courier.pathao.outgoing.username',
+            'bd-courier.pathao.outgoing.password',
         ]);
 
-        $this->username      = config('bd-courier.pathao.username');
-        $this->password      = config('bd-courier.pathao.password');
+        $this->username      = config('bd-courier.pathao.outgoing.username');
+        $this->password      = config('bd-courier.pathao.outgoing.password');
     }
 
     protected function requestNewToken(): ?string
