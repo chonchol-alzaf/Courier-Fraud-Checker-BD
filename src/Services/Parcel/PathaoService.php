@@ -9,7 +9,8 @@ use App\Models\Area;
 use App\Models\CourierArea;
 use App\Models\CourierLocationMap;
 use App\Models\CourierZone;
-use App\Models\PickupPoints;
+use App\Models\PickupPoint;
+use App\Models\Zone;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -92,15 +93,19 @@ class PathaoService implements CourierServiceInterface
         throw new CustomException($message, $code);
     }
 
-    private function resolveStoreLocation(PickupPoints $pickup_points)
+    private function resolveLocationByArea($local_area_id, bool $throwIfNotFound = true)
     {
-        $courier_area_id = CourierLocationMap::where("local_id", $pickup_points->area_id)
+        $courier_area_id = CourierLocationMap::where("local_id", $local_area_id)
             ->where("local_type", Area::class)
             ->where("courier_name", CourierEnum::PATHAO->value)
             ->value("remote_id");
 
         if (! $courier_area_id) {
-            throw new CustomException("Area is not valid for pathao", 404);
+
+            if ($throwIfNotFound) {
+                throw new CustomException("Area is not valid for pathao", 404);
+            }
+            return [];
         }
 
         $zone_id = CourierArea::where("courier_id", $courier_area_id)
@@ -113,13 +118,33 @@ class PathaoService implements CourierServiceInterface
         return ['zone_id' => $zone_id, "city_id" => $city_id, 'area_id' => (int) $courier_area_id];
     }
 
-    public function storeCreate(PickupPoints $pickup_points)
+    private function resolveLocationByZone($local_zone_id, bool $throwIfNotFound = true)
     {
+        $courier_zone_id = CourierLocationMap::where("local_id", $local_zone_id)
+            ->where("local_type", Zone::class)
+            ->where("courier_name", CourierEnum::PATHAO->value)
+            ->value("remote_id");
 
+        if (! $courier_zone_id) {
+            if ($throwIfNotFound) {
+                throw new CustomException("Zone is not valid for pathao", 404);
+            }
+            return [];
+        }
+
+        $city_id = CourierZone::where("courier_id", $courier_zone_id)
+            ->where("courier_name", CourierEnum::PATHAO->value)
+            ->value("city_id");
+
+        return ["zone_id" => (int) $courier_zone_id, "city_id" => $city_id];
+    }
+
+    public function storeCreate(PickupPoint $pickup_points)
+    {
         $access_token = $this->issueToken();
 
         throw_if(is_null($pickup_points->vendor->name ?? null), new CustomException("Vendor name not found!", 500));
-        $mapping = $this->resolveStoreLocation($pickup_points);
+        $mapping = $this->resolveLocationByArea($pickup_points->area_id);
 
         $data = [
             "name" => config("app.platform_name") . "({$pickup_points->vendor->name}-{$pickup_points->id})",
@@ -254,7 +279,7 @@ class PathaoService implements CourierServiceInterface
         return $area_lists;
     }
 
-    public function addParcel($data)
+    public function addParcel(array $data)
     {
         $this->validation($data, [
             "store_id",
@@ -269,6 +294,22 @@ class PathaoService implements CourierServiceInterface
         ]);
 
         $access_token = $this->issueToken();
+
+        $mapping = null;
+
+        if ($data['recipient_area']) {
+            $mapping = $this->resolveLocationByArea($data['recipient_area']);
+        } elseif ($data['recipient_zone']) {
+            $mapping = $this->resolveLocationByZone($data['recipient_zone']);
+        }
+
+        if ($mapping) {
+            $data['recipient_area'] = $mapping['area_id'] ?? null;
+            $data['recipient_zone'] = $mapping['zone_id'] ?? null;
+            $data['recipient_city'] = $mapping['city_id'] ?? null;
+        }
+
+        $data = array_filter($data, fn($v) => ($v ?? '') !== '');
 
         $response = Http::withToken($access_token)
             ->withHeaders([

@@ -6,9 +6,8 @@ use Alzaf\BdCourier\Services\Parcel\CarryBeeService;
 use Alzaf\BdCourier\Services\Parcel\PathaoService;
 use Alzaf\BdCourier\Services\Parcel\RedxService;
 use Alzaf\BdCourier\Services\Parcel\SteadfastService;
-use App\Models\PickupPoints;
+use App\Models\PickupPoint;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Support\Facades\Log;
 
 class CourierParcelSupport
 {
@@ -46,7 +45,7 @@ class CourierParcelSupport
         return $service->{$method}(...$args);
     }
 
-    public function createStore($courier_name, PickupPoints $pickup_points)
+    public function createStore($courier_name, PickupPoint $pickup_points)
     {
         $serviceClass = $this->services[$courier_name] ?? null;
         if (! $serviceClass) {
