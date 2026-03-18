@@ -2,14 +2,16 @@
 namespace Alzaf\BdCourier\Services\Parcel;
 
 use Alzaf\BdCourier\Contracts\CourierServiceInterface;
+use Alzaf\BdCourier\Enums\CourierEnum;
 use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Traits\ParcelValidationTrait;
+use App\Models\Area;
 use App\Models\CourierArea;
+use App\Models\CourierLocationMap;
 use App\Models\CourierZone;
 use App\Models\PickupPoints;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Shope\Core\Exceptions\CustomException;
 
@@ -92,11 +94,23 @@ class PathaoService implements CourierServiceInterface
 
     private function resolveStoreLocation(PickupPoints $pickup_points)
     {
-        $zone_id = CourierArea::where("courier_id", $pickup_points->area_id)
-            ->value("zone_id");
-        $city_id = CourierZone::where("courier_id", $zone_id)->value("city_id");
+        $courier_area_id = CourierLocationMap::where("local_id", $pickup_points->area_id)
+            ->where("local_type", Area::class)
+            ->where("courier_name", CourierEnum::PATHAO->value)
+            ->value("remote_id");
 
-        return ['zone_id' => $zone_id, "city_id" => $city_id, 'area_id' => $pickup_points->area_id];
+        if (! $courier_area_id) {
+            throw new CustomException("Area is not valid for pathao", 404);
+        }
+
+        $zone_id = CourierArea::where("courier_id", $courier_area_id)
+            ->where("courier_name", CourierEnum::PATHAO->value)
+            ->value("zone_id");
+        $city_id = CourierZone::where("courier_id", $zone_id)
+            ->where("courier_name", CourierEnum::PATHAO->value)
+            ->value("city_id");
+
+        return ['zone_id' => $zone_id, "city_id" => $city_id, 'area_id' => (int) $courier_area_id];
     }
 
     public function storeCreate(PickupPoints $pickup_points)
@@ -108,7 +122,7 @@ class PathaoService implements CourierServiceInterface
         $mapping = $this->resolveStoreLocation($pickup_points);
 
         $data = [
-            "name"           => $pickup_points->vendor->name . "-" . Str::ulid(),
+            "name" => config("app.platform_name") . "({$pickup_points->vendor->name}-{$pickup_points->id})",
             "contact_name"   => $pickup_points->contact_name,
             "contact_number" => $pickup_points->contact_number,
             "address"        => $pickup_points->address,
@@ -265,9 +279,8 @@ class PathaoService implements CourierServiceInterface
             $this->errorThrow($response);
         }
 
+        $response = data_get($response->json(), 'data');
 
-          $response = data_get($response->json(), 'data');
-       
         return $response;
 
     }
