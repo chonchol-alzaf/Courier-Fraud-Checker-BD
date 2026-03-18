@@ -7,16 +7,6 @@ class CourierWebhookConfig
     {
         return $this->resolveString($provider, [
             'signature_header',
-            'request_header',
-            'secret_header',
-        ]);
-    }
-
-    public function responseHeader(string $provider): string
-    {
-        return $this->resolveString($provider, [
-            'response_header',
-            'secret_header',
         ]);
     }
 
@@ -29,10 +19,16 @@ class CourierWebhookConfig
         return $secret === '' ? null : $secret;
     }
 
+    public function responseHeader(string $provider): string
+    {
+        return $this->resolveString($provider, [
+            'secret_header',
+        ]);
+    }
+
     public function responseSecret(string $provider): ?string
     {
         $secret = $this->resolveString($provider, [
-            'secret',
             'secret_header_value',
         ]);
 
