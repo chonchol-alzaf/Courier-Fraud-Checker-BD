@@ -11,11 +11,16 @@ class DeliveryStatsCalculator
             ? round(($success / $total) * 100, 2)
             : null;
 
+        $cancelRate = $total > 0
+            ? round(($cancel / $total) * 100, 2)
+            : null;
+
         return [
             'success'      => $success,
             'cancel'       => $cancel,
             'total'        => $total,
             'success_rate' => $successRate,
+            'cancel_rate' => $cancelRate,
             'risk_level'   => self::calculateRiskLevel($successRate),
         ];
     }
