@@ -47,24 +47,7 @@ class CourierFraudCheckerSupport
             }
         }
 
-
-        $cancelRate = $total > 0
-            ? round(($cancel / $total) * 100, 2)
-            : null;
-
-        $rates = collect($data)
-            ->pluck('success_rate')
-            ->filter(fn($rate) => ! is_null($rate));
-
-        $total_success_rate = $rates->avg();
-
-        $data['totalSummary']  = [
-            'total'        => $total,
-            'success'      => $success,
-            'cancel'       => $cancel,
-            'success_rate' => $total_success_rate,
-            'cancel_rate'  => $cancelRate,
-        ];
+        $data['totalSummary'] = DeliveryStatsCalculator::calculate($success, $cancel);
 
         return $data;
     }
