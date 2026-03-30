@@ -15,25 +15,27 @@ class VerifyCourierWebhook
 
     public function handle(Request $request, Closure $next, string $provider): Response
     {
-        $headerName = $this->courierWebhookConfig->requestHeader($provider);
+        [$key_type, $key_name] = $this->resolveCredentialSource($provider);
 
-        $secret = $this->courierWebhookConfig->requestSecret($provider);
+        $signature_value = config(sprintf('bd-courier.%s.incoming.signature_value', $provider));
 
-        if ($headerName === '' || blank($secret)) {
+        if ($key_name === '' || blank($signature_value)) {
             Log::error('Courier webhook verification is not configured.', [
                 'provider' => $provider,
+                'source'   => $key_type,
                 'route'    => $request->route()?->getName(),
             ]);
 
             throw new AuthenticationException('Unauthenticated.');
         }
 
-        $providedSecret = $request->header($headerName);
+        $providedSecret = $this->resolveProvidedSecret($request, $key_type, $key_name);
 
-        if (! is_string($providedSecret) || $providedSecret === '' || ! hash_equals($secret, $providedSecret)) {
+        if (! is_string($providedSecret) || $providedSecret === '' || ! hash_equals($signature_value, $providedSecret)) {
             Log::warning('Courier webhook verification failed.', [
                 'provider' => $provider,
-                'header'   => $headerName,
+                'key_type'   => $key_type,
+                'key_name'      => $key_name,
                 'ip'       => $request->ip(),
                 'route'    => $request->route()?->getName(),
             ]);
@@ -42,5 +44,29 @@ class VerifyCourierWebhook
         }
 
         return $next($request);
+    }
+
+    /**
+     * Prefer query-string verification when configured, otherwise fall back to header verification.
+     *
+     * @return array{string, string}
+     */
+    private function resolveCredentialSource(string $provider): array
+    {
+        $queryParam = trim((string) config("bd-courier.$provider.incoming.signature_query_param", ''));
+
+        if ($queryParam !== '') {
+            return ['query', $queryParam];
+        }
+
+        return ['header', $this->courierWebhookConfig->requestHeader($provider)];
+    }
+
+    private function resolveProvidedSecret(Request $request, string $key_type, string $key_name): mixed
+    {
+        return match ($key_type) {
+            'query' => $request->query($key_name),
+            default => $request->header($key_name),
+        };
     }
 }

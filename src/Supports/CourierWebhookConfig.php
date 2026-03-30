@@ -10,15 +10,6 @@ class CourierWebhookConfig
         ]);
     }
 
-    public function requestSecret(string $provider): ?string
-    {
-        $secret = $this->resolveString($provider, [
-            'signature_value',
-        ]);
-
-        return $secret === '' ? null : $secret;
-    }
-
     public function responseHeader(string $provider): string
     {
         return $this->resolveString($provider, [
