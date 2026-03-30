@@ -1,10 +1,10 @@
 <?php
 namespace Alzaf\BdCourier\Supports;
 
-use Alzaf\BdCourier\Services\FraudCheck\SteadfastService;
+use Alzaf\BdCourier\Services\FraudCheck\CarryBeeService;
 use Alzaf\BdCourier\Services\FraudCheck\PathaoService;
 use Alzaf\BdCourier\Services\FraudCheck\RedxService;
-use Alzaf\BdCourier\Services\FraudCheck\CarryBeeService;
+use Alzaf\BdCourier\Services\FraudCheck\SteadfastService;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +14,7 @@ class CourierFraudCheckerSupport
     public function __construct(protected Container $container)
     {}
 
-    public function check(string $phoneNumber, bool $is_disable_cache = true): array
+    public function check(string $phoneNumber, bool $is_disable_cache = true)
     {
 
         $data = [];
@@ -47,24 +47,7 @@ class CourierFraudCheckerSupport
             }
         }
 
-
-        $cancelRate = $total > 0
-            ? round(($cancel / $total) * 100, 2)
-            : null;
-
-        $rates = collect($data)
-            ->pluck('success_rate')
-            ->filter(fn($rate) => ! is_null($rate));
-
-        $total_success_rate = $rates->avg();
-
-        $data['totalSummary']  = [
-            'total'        => $total,
-            'success'      => $success,
-            'cancel'       => $cancel,
-            'success_rate' => $total_success_rate,
-            'cancel_rate'  => $cancelRate,
-        ];
+        $data['totalSummary'] = DeliveryStatsCalculator::calculate($success, $cancel);
 
         return $data;
     }

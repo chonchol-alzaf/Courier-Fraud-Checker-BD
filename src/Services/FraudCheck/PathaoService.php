@@ -4,6 +4,7 @@ namespace Alzaf\BdCourier\Services\FraudCheck;
 use Alzaf\BdCourier\Contracts\CourierServiceInterface;
 use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Traits\ApiTokenManager;
+use App\Models\ParentOrder;
 use Illuminate\Support\Facades\Http;
 
 class PathaoService implements CourierServiceInterface
@@ -21,27 +22,27 @@ class PathaoService implements CourierServiceInterface
     protected array $customerRating = [
         'excellent_customer' => [
             'rating'       => 'excellent_customer',
-            'risk_level'   => 'low',
+            'risk_level'   => ParentOrder::RISK_LEVEL['SAFE'],
             'success_rate' => 95,
         ],
         'good_customer'      => [
             'rating'       => 'good_customer',
-            'risk_level'   => 'low',
+            'risk_level'   => ParentOrder::RISK_LEVEL['SAFE'],
             'success_rate' => 85,
         ],
         'moderate_customer'  => [
             'rating'       => 'moderate_customer',
-            'risk_level'   => 'medium',
+            'risk_level'   => ParentOrder::RISK_LEVEL['WARNING'],
             'success_rate' => 70,
         ],
         'risky_customer'     => [
             'rating'       => 'risky_customer',
-            'risk_level'   => 'very high',
+            'risk_level'   => ParentOrder::RISK_LEVEL['RISKY'],
             'success_rate' => 30,
         ],
         'new_customer'       => [
             'rating'       => 'new_customer',
-            'risk_level'   => 'unknown',
+            'risk_level'   => ParentOrder::RISK_LEVEL['NEW_CUSTOMER'],
             'success_rate' => null,
         ],
     ];
@@ -53,8 +54,8 @@ class PathaoService implements CourierServiceInterface
             'bd-courier.pathao.outgoing.password',
         ]);
 
-        $this->username      = config('bd-courier.pathao.outgoing.username');
-        $this->password      = config('bd-courier.pathao.outgoing.password');
+        $this->username = config('bd-courier.pathao.outgoing.username');
+        $this->password = config('bd-courier.pathao.outgoing.password');
     }
 
     protected function requestNewToken(): ?string

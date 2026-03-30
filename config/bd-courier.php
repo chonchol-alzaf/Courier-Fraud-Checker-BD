@@ -37,18 +37,21 @@ return [
         ],
     ],
 
-    CourierEnum::REDX->value      => [
-        'enable'   => env('REDX_ENABLE', false),
+    CourierEnum::REDX->value => [
+        'enable' => env('REDX_ENABLE', false),
         'outgoing' => [
-            'phone'    => env('REDX_PHONE'),
+            'phone' => env('REDX_PHONE'),
             'password' => env('REDX_PASSWORD'),
+            'base_url' => env('REDX_BASE_URL', 'sandbox.redx.com.bd/v1.0.0-beta'),
+            "token"=> env("REDX_TOKEN","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiaWF0IjoxNzM1NTMxNjU2LCJpc3MiOiJ0OTlnbEVnZTBUTm5MYTNvalh6MG9VaGxtNEVoamNFMyIsInNob3BfaWQiOjEsInVzZXJfaWQiOjZ9.zpKfyHK6zPBVaTrYevnCqnUA-e2jFKQJ7lK-z4aOx2g"),
         ],
         'incoming' => [
             'secret_header' => env('REDX_WEBHOOK_SECRET_HEADER', 'X-RedX-Webhook-Secret'),
-            'secret'        => env('REDX_WEBHOOK_SECRET'),
+            'secret' => env('REDX_WEBHOOK_SECRET'),
         ],
 
     ],
+
 
     CourierEnum::STEADFAST->value => [
         'enable'   => env('STEADFAST_ENABLE', false),

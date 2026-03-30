@@ -30,22 +30,15 @@ class CourierParcelSupport
         }
 
         $service = $this->container->make($serviceClass);
-        $map     = [
-            'createStore' => 'storeCreate',
-            'cityList'        => 'cityList',
-            'zoneList'        => 'zoneList',
-            'areaList'        => 'areaList',
-        ];
-        $method = $map[$action] ?? $action;
 
-        if (! method_exists($service, $method)) {
-            return ['error' => "Method [{$method}] not supported for [{$courier}]"];
+        if (! method_exists($service, $action)) {
+            return ['error' => "Method [{$action}] not supported for [{$courier}]"];
         }
 
-        return $service->{$method}(...$args);
+        return $service->{$action}(...$args);
     }
 
-    public function createStore($courier_name, PickupPoint $pickup_points)
+    public function storeCreate($courier_name, PickupPoint $pickup_points)
     {
         $serviceClass = $this->services[$courier_name] ?? null;
         if (! $serviceClass) {

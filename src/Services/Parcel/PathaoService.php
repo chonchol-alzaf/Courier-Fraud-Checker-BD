@@ -44,7 +44,7 @@ class PathaoService implements CourierServiceInterface
         $this->client_secret = config('bd-courier.pathao.outgoing.client_secret');
     }
 
-    private function issueToken()
+    function issueToken()
     {
 
         $cache_key = "patha:access_key";
@@ -297,19 +297,29 @@ class PathaoService implements CourierServiceInterface
 
         $mapping = null;
 
-        if ($data['recipient_area']) {
-            $mapping = $this->resolveLocationByArea($data['recipient_area']);
-        } elseif ($data['recipient_zone']) {
-            $mapping = $this->resolveLocationByZone($data['recipient_zone']);
+        if (isset($data['recipient_area_id'])) {
+            $mapping = $this->resolveLocationByArea($data['recipient_area_id']);
+        } elseif (isset($data['recipient_zone_id'])) {
+            $mapping = $this->resolveLocationByZone($data['recipient_zone_id']);
         }
 
-        if ($mapping) {
-            $data['recipient_area'] = $mapping['area_id'] ?? null;
-            $data['recipient_zone'] = $mapping['zone_id'] ?? null;
-            $data['recipient_city'] = $mapping['city_id'] ?? null;
-        }
-
-        $data = array_filter($data, fn($v) => ($v ?? '') !== '');
+       
+        $data = array_filter([
+            'store_id' => $data['store_id'] ?? null,
+            'merchant_order_id' => $data['merchant_order_id'] ?? null,
+            'recipient_name' => $data['recipient_name'] ?? null,
+            'recipient_phone' => $data['recipient_phone'] ?? null,
+            'recipient_address' => $data['recipient_address'] ?? null,
+            'recipient_city' => $mapping['city_id'] ?? null,
+            'recipient_zone' => $mapping['zone_id'] ?? null,
+            'recipient_area' => $mapping['area_id'] ?? null,
+            'special_instruction' => $data['special_instruction'] ?? null,
+            'delivery_type' => $data['delivery_type'] ?? null,
+            'item_type' => $data['item_type'] ?? null,
+            'item_quantity' => $data['item_quantity'] ?? null,
+            'item_weight' => $data['item_weight'] ?? null,
+            'amount_to_collect' => $data['amount_to_collect'] ?? null,
+        ], fn ($value) => ($value ?? '') !== '');
 
         $response = Http::withToken($access_token)
             ->withHeaders([
