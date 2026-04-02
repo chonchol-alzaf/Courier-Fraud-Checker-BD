@@ -1,6 +1,8 @@
 <?php
+
 namespace Alzaf\BdCourier\Supports;
 
+use Alzaf\BdCourier\Contracts\FraudCheckServiceInterface;
 use Alzaf\BdCourier\Services\FraudCheck\CarryBeeService;
 use Alzaf\BdCourier\Services\FraudCheck\PathaoService;
 use Alzaf\BdCourier\Services\FraudCheck\RedxService;
@@ -11,56 +13,72 @@ use Illuminate\Support\Facades\Log;
 
 class CourierFraudCheckerSupport
 {
-    public function __construct(protected Container $container)
-    {}
+    private const SERVICE_MAP = [
+        'steadfast' => SteadfastService::class,
+        'pathao' => PathaoService::class,
+        'redx' => RedxService::class,
+        'carrybee' => CarryBeeService::class,
+    ];
 
-    public function check(string $phoneNumber, bool $is_disable_cache = true)
+    public function __construct(protected Container $container) {}
+
+    public function check(string $phoneNumber, bool $is_disable_cache = true): array
     {
+        CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
         $data = [];
-        if (config('bd-courier.steadfast.enable')) {
-            $data['steadfast'] = $this->safeServiceCall('steadfast', SteadfastService::class, $phoneNumber, $is_disable_cache);
-        }
-        if (config('bd-courier.pathao.enable')) {
-            $data['pathao'] = $this->safeServiceCall('pathao', PathaoService::class, $phoneNumber, $is_disable_cache);
-        }
-        if (config('bd-courier.redx.enable')) {
-            $data['redx'] = $this->safeServiceCall('redx', RedxService::class, $phoneNumber, $is_disable_cache);
-        }
-        if (config('bd-courier.carrybee.enable')) {
-            $data['carrybee'] = $this->safeServiceCall('carrybee', CarryBeeService::class, $phoneNumber, $is_disable_cache);
+
+        foreach ($this->enabledServices() as $service => $serviceClass) {
+            $data[$service] = $this->safeServiceCall($service, $serviceClass, $phoneNumber, $is_disable_cache);
         }
 
-        $total   = 0;
-        $success = 0;
-        $cancel  = 0;
-
-        foreach ($data as $item) {
-            if (isset($item['total']) && is_numeric($item['total'])) {
-                $total += (int) $item['total'];
-            }
-            if (isset($item['success']) && is_numeric($item['success'])) {
-                $success += (int) $item['success'];
-            }
-            if (isset($item['cancel']) && is_numeric($item['cancel'])) {
-                $cancel += (int) $item['cancel'];
-            }
-        }
-
-        $data['totalSummary'] = DeliveryStatsCalculator::calculate($success, $cancel);
+        $data['totalSummary'] = $this->buildTotalSummary($data);
 
         return $data;
     }
 
+    protected function enabledServices(): array
+    {
+        return array_filter(
+            self::SERVICE_MAP,
+            fn (string $service) => (bool) config("bd-courier.{$service}.enable"),
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    protected function buildTotalSummary(array $data): array
+    {
+        $success = 0;
+        $cancel = 0;
+
+        foreach ($data as $item) {
+            if (
+                isset($item['success'], $item['cancel'], $item['total'])
+                && is_numeric($item['success'])
+                && is_numeric($item['cancel'])
+                && is_numeric($item['total'])
+            ) {
+                $success += (int) $item['success'];
+                $cancel += (int) $item['cancel'];
+            }
+        }
+
+        return DeliveryStatsCalculator::calculate($success, $cancel);
+    }
+
     protected function safeServiceCall(string $service, string $serviceClass, string $phoneNumber, bool $is_disable_cache): array
     {
-        $cacheKey       = "courier:{$service}:phone:{$phoneNumber}";
+        $cacheKey = "courier:{$service}:phone:{$phoneNumber}";
         $shouldUseCache = ! $is_disable_cache;
 
         $fetchStats = function () use ($serviceClass, $phoneNumber): array {
-            return $this->container
-                ->make($serviceClass)
-                ->getCustomerDeliveryStats($phoneNumber);
+            $service = $this->container->make($serviceClass);
+
+            if (! $service instanceof FraudCheckServiceInterface) {
+                throw new \UnexpectedValueException("Service [{$serviceClass}] must implement FraudCheckServiceInterface");
+            }
+
+            return $service->getCustomerDeliveryStats($phoneNumber);
         };
 
         try {
@@ -94,9 +112,9 @@ class CourierFraudCheckerSupport
 
         } catch (\Throwable $exception) {
             Log::warning('Courier service request failed', [
-                'service'   => $service,
+                'service' => $service,
                 'exception' => $exception->getMessage(),
-                'type'      => $exception::class,
+                'type' => $exception::class,
             ]);
 
             return [

@@ -1,4 +1,5 @@
 <?php
+
 namespace Alzaf\BdCourier\Middleware;
 
 use Alzaf\BdCourier\Supports\CourierWebhookConfig;
@@ -10,8 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class VerifyCourierWebhook
 {
-    public function __construct(private CourierWebhookConfig $courierWebhookConfig)
-    {}
+    public function __construct(private CourierWebhookConfig $courierWebhookConfig) {}
 
     public function handle(Request $request, Closure $next, string $provider): Response
     {
@@ -22,8 +22,8 @@ class VerifyCourierWebhook
         if ($key_name === '' || blank($signature_value)) {
             Log::error('Courier webhook verification is not configured.', [
                 'provider' => $provider,
-                'source'   => $key_type,
-                'route'    => $request->route()?->getName(),
+                'source' => $key_type,
+                'route' => $request->route()?->getName(),
             ]);
 
             throw new AuthenticationException('Unauthenticated.');
@@ -34,10 +34,10 @@ class VerifyCourierWebhook
         if (! is_string($providedSecret) || $providedSecret === '' || ! hash_equals($signature_value, $providedSecret)) {
             Log::warning('Courier webhook verification failed.', [
                 'provider' => $provider,
-                'key_type'   => $key_type,
-                'key_name'      => $key_name,
-                'ip'       => $request->ip(),
-                'route'    => $request->route()?->getName(),
+                'key_type' => $key_type,
+                'key_name' => $key_name,
+                'ip' => $request->ip(),
+                'route' => $request->route()?->getName(),
             ]);
 
             throw new AuthenticationException('Unauthenticated.');

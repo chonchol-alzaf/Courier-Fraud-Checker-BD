@@ -1,4 +1,5 @@
 <?php
+
 namespace Alzaf\BdCourier\Providers;
 
 use Alzaf\BdCourier\Supports\CourierFraudCheckerSupport;
@@ -9,7 +10,7 @@ class CourierServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $configPath = __DIR__ . '/../../config/bd-courier.php';
+        $configPath = __DIR__.'/../../config/bd-courier.php';
 
         // Publish the config file on vendor:publish
         $this->publishes([
@@ -19,7 +20,7 @@ class CourierServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $configPath = __DIR__ . '/../../config/bd-courier.php';
+        $configPath = __DIR__.'/../../config/bd-courier.php';
 
         $this->mergeConfigFrom(
             $configPath, 'bd-courier'

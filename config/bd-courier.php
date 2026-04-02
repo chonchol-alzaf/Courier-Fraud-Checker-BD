@@ -5,6 +5,14 @@ use App\Enums\OrderStatusEnum;
 
 return [
     'default_parcel' => env('DEFAULT_COURIER_PARCEL', 'pathao'),
+    'risk_levels' => [
+        'SAFE' => ParenOrder::RISK_LEVEL['SAFE'],
+        'WARNING' => ParenOrder::RISK_LEVEL['warning'],
+        'RISKY' => ParenOrder::RISK_LEVEL['risky'],
+        'REJECT' => ParenOrder::RISK_LEVEL['reject'],
+        'NEW_CUSTOMER' => ParenOrder::RISK_LEVEL['new_customer'],
+    ],
+
     CourierEnum::PATHAO->value => [
         'enable' => env('PATHAO_ENABLE', false),
         'outgoing' => [

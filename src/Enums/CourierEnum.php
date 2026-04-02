@@ -8,5 +8,5 @@ enum CourierEnum: string
     case REDX = 'redx';
     case STEADFAST = 'steadfast';
     case CARRYBEE = 'carrybee';
-   
+
 }

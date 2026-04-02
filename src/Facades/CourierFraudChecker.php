@@ -1,10 +1,11 @@
 <?php
+
 namespace Alzaf\BdCourier\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static array check($phoneNumber)
+ * @method static array check(string $phoneNumber, bool $is_disable_cache = true)
  */
 class CourierFraudChecker extends Facade
 {
@@ -15,6 +16,6 @@ class CourierFraudChecker extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return "courier-fraud-checker";
+        return 'courier-fraud-checker';
     }
 }

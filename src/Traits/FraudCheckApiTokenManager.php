@@ -1,9 +1,10 @@
 <?php
+
 namespace Alzaf\BdCourier\Traits;
 
 use Illuminate\Support\Facades\Cache;
 
-trait ApiTokenManager
+trait FraudCheckApiTokenManager
 {
     protected int $tokenCacheMinutes = 50;
 
@@ -49,14 +50,14 @@ trait ApiTokenManager
             $token = $this->getApiToken();
 
             if (! $token) {
-                throw new \Exception("Failed to obtain API token");
+                throw new \Exception('Failed to obtain API token');
             }
 
             $response = $callback($token);
 
             if ($response->status() === 401) {
                 $this->forgetApiToken();
-                throw new \Exception("Token expired");
+                throw new \Exception('Token expired');
             }
 
             return $response;

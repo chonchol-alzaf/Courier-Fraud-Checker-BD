@@ -1,6 +1,8 @@
 <?php
+
 namespace Alzaf\BdCourier\Supports;
 
+use Alzaf\BdCourier\Contracts\ParcelServiceInterface;
 use Alzaf\BdCourier\Enums\CourierEnum;
 use Alzaf\BdCourier\Services\Parcel\CarryBeeService;
 use Alzaf\BdCourier\Services\Parcel\PathaoService;
@@ -11,25 +13,32 @@ use Illuminate\Contracts\Container\Container;
 
 class CourierParcelSupport
 {
-    private $services;
+    private const SERVICE_MAP = [
+        CourierEnum::PATHAO->value => PathaoService::class,
+        CourierEnum::REDX->value => RedxService::class,
+        CourierEnum::STEADFAST->value => SteadfastService::class,
+        CourierEnum::CARRYBEE->value => CarryBeeService::class,
+    ];
+
+    private array $services;
+
     public function __construct(protected Container $container)
     {
-        $this->services = [
-            CourierEnum::PATHAO->value    => PathaoService::class,
-            CourierEnum::REDX->value      => RedxService::class,
-            CourierEnum::STEADFAST->value => SteadfastService::class,
-            CourierEnum::CARRYBEE->value  => CarryBeeService::class,
-        ];
+        $this->services = self::SERVICE_MAP;
     }
 
-    public function call(string $courier, string $action, ...$args)
+    public function call(string $courier, string $action, mixed ...$args): mixed
     {
-        $serviceClass = $this->services[$courier] ?? null;
+        $serviceClass = $this->services[strtolower($courier)] ?? null;
         if (! $serviceClass) {
             return ['error' => "Unsupported courier [{$courier}]"];
         }
 
         $service = $this->container->make($serviceClass);
+
+        if (! $service instanceof ParcelServiceInterface) {
+            return ['error' => "Service [{$courier}] does not implement the parcel contract"];
+        }
 
         if (! method_exists($service, $action)) {
             return ['error' => "Method [{$action}] not supported for [{$courier}]"];
@@ -38,16 +47,8 @@ class CourierParcelSupport
         return $service->{$action}(...$args);
     }
 
-    public function storeCreate($courier_name, PickupPoint $pickup_points)
+    public function storeCreate(string $courier_name, PickupPoint $pickup_points): mixed
     {
-        $serviceClass = $this->services[$courier_name] ?? null;
-        if (! $serviceClass) {
-            return [
-                'error' => "Unsupported  courier [{$courier_name}]",
-            ];
-        }
-
-        return $this->container->make($serviceClass)->storeCreate($pickup_points);
-
+        return $this->call($courier_name, 'storeCreate', $pickup_points);
     }
 }

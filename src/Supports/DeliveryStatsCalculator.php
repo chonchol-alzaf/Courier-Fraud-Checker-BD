@@ -1,7 +1,6 @@
 <?php
-namespace Alzaf\BdCourier\Supports;
 
-use App\Models\ParentOrder;
+namespace Alzaf\BdCourier\Supports;
 
 class DeliveryStatsCalculator
 {
@@ -18,26 +17,26 @@ class DeliveryStatsCalculator
             : null;
 
         return [
-            'success'      => $success,
-            'cancel'       => $cancel,
-            'total'        => $total,
+            'success' => $success,
+            'cancel' => $cancel,
+            'total' => $total,
             'success_rate' => $successRate,
             'cancel_rate' => $cancelRate,
-            'risk_level'   => self::calculateRiskLevel($successRate),
+            'risk_level' => self::calculateRiskLevel($successRate),
         ];
     }
 
     private static function calculateRiskLevel(?float $rate): string
     {
         if ($rate === null) {
-            return ParentOrder::RISK_LEVEL['NEW_CUSTOMER'];
+            return RiskLevelResolver::get('NEW_CUSTOMER');
         }
 
         return match (true) {
-            $rate >= 70 => ParentOrder::RISK_LEVEL['SAFE'],
-            $rate >= 50 => ParentOrder::RISK_LEVEL['WARNING'],
-            $rate >= 35 => ParentOrder::RISK_LEVEL['RISKY'],
-            default     => ParentOrder::RISK_LEVEL['REJECT'],
+            $rate >= 70 => RiskLevelResolver::get('SAFE'),
+            $rate >= 50 => RiskLevelResolver::get('WARNING'),
+            $rate >= 35 => RiskLevelResolver::get('RISKY'),
+            default => RiskLevelResolver::get('REJECT'),
         };
     }
 }

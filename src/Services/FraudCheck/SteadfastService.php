@@ -1,18 +1,22 @@
 <?php
+
 namespace Alzaf\BdCourier\Services\FraudCheck;
 
+use Alzaf\BdCourier\Contracts\FraudCheckServiceInterface;
 use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Support\Facades\Http;
 
-class SteadfastService
+class SteadfastService implements FraudCheckServiceInterface
 {
     protected string $email;
+
     protected string $password;
 
     protected const LOGIN_PAGE = 'https://steadfast.com.bd/login';
-    protected const LOGIN_URL  = 'https://steadfast.com.bd/login';
+
+    protected const LOGIN_URL = 'https://steadfast.com.bd/login';
 
     public function __construct()
     {
@@ -21,7 +25,7 @@ class SteadfastService
             'bd-courier.steadfast.outgoing.password',
         ]);
 
-        $this->email    = config('bd-courier.steadfast.outgoing.user');
+        $this->email = config('bd-courier.steadfast.outgoing.user');
         $this->password = config('bd-courier.steadfast.outgoing.password');
     }
 
@@ -29,7 +33,7 @@ class SteadfastService
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
-        $cookieJar = new CookieJar();
+        $cookieJar = new CookieJar;
 
         $client = Http::withOptions([
             'cookies' => $cookieJar,
@@ -47,8 +51,8 @@ class SteadfastService
 
         // Step 2: login
         $login = $client->asForm()->post(self::LOGIN_URL, [
-            '_token'   => $csrf,
-            'email'    => $this->email,
+            '_token' => $csrf,
+            'email' => $this->email,
             'password' => $this->password,
         ]);
 
@@ -72,7 +76,7 @@ class SteadfastService
         $data = $result->json();
 
         $success = (int) ($data['total_delivered'] ?? 0);
-        $cancel  = (int) ($data['total_cancelled'] ?? 0);
+        $cancel = (int) ($data['total_cancelled'] ?? 0);
 
         $stats = DeliveryStatsCalculator::calculate($success, $cancel);
 
@@ -80,5 +84,4 @@ class SteadfastService
             'data_type' => 'delivery',
         ], $stats);
     }
-
 }

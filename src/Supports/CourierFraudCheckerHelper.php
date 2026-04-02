@@ -1,4 +1,5 @@
 <?php
+
 namespace Alzaf\BdCourier\Supports;
 
 use Illuminate\Support\Facades\Validator;
@@ -9,7 +10,6 @@ class CourierFraudCheckerHelper
     /**
      * Check that all required environment variables are set.
      *
-     * @param array $requiredEnv
      * @throws InvalidArgumentException
      */
     public static function checkRequiredEnv(array $requiredEnv)
@@ -24,7 +24,8 @@ class CourierFraudCheckerHelper
     /**
      * Validate the phone number to ensure it is a valid Bangladeshi number.
      *
-     * @param string $phoneNumber
+     * @param  string  $phoneNumber
+     *
      * @throws InvalidArgumentException
      */
     // Validate if the phone number is a valid Bangladeshi phone number

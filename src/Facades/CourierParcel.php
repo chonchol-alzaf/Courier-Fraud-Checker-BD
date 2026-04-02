@@ -1,10 +1,12 @@
 <?php
+
 namespace Alzaf\BdCourier\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static array check($phoneNumber)
+ * @method static mixed call(string $courier, string $action, mixed ...$args)
+ * @method static mixed storeCreate(string $courier_name, \App\Models\PickupPoint $pickup_points)
  */
 class CourierParcel extends Facade
 {
@@ -15,6 +17,6 @@ class CourierParcel extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return "courier-parcel";
+        return 'courier-parcel';
     }
 }

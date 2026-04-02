@@ -1,4 +1,5 @@
 <?php
+
 namespace Alzaf\BdCourier\Supports;
 
 class CourierWebhookConfig

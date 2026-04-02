@@ -1,16 +1,19 @@
 <?php
+
 namespace Alzaf\BdCourier\Services\FraudCheck;
 
+use Alzaf\BdCourier\Contracts\FraudCheckServiceInterface;
 use Alzaf\BdCourier\Supports\CourierFraudCheckerHelper;
 use Alzaf\BdCourier\Supports\DeliveryStatsCalculator;
-use Alzaf\BdCourier\Traits\ApiTokenManager;
+use Alzaf\BdCourier\Traits\FraudCheckApiTokenManager;
 use Illuminate\Support\Facades\Http;
 
-class CarryBeeService
+class CarryBeeService implements FraudCheckServiceInterface
 {
-    use ApiTokenManager;
+    use FraudCheckApiTokenManager;
 
     protected string $phone;
+
     protected string $password;
 
     protected string $tokenCacheKey = 'courier_fraud_checker_bd:carrybee_token';
@@ -29,7 +32,7 @@ class CarryBeeService
         ]);
 
         // Load from config
-        $this->phone    = config('bd-courier.carrybee.outgoing.phone');
+        $this->phone = config('bd-courier.carrybee.outgoing.phone');
         $this->password = config('bd-courier.carrybee.outgoing.password');
 
         $businessId = config('bd-courier.carrybee.outgoing.business_id');
@@ -42,7 +45,7 @@ class CarryBeeService
     protected function requestNewToken(): ?string
     {
         $response = Http::timeout(10)->post(self::LOGIN_URL, [
-            'phone'    => '+88' . $this->phone,
+            'phone' => '+88'.$this->phone,
             'password' => $this->password,
         ]);
 
@@ -53,26 +56,26 @@ class CarryBeeService
         return data_get($response->json(), 'data.accessToken');
     }
 
-    public function getCustomerDeliveryStats(string $phoneNumber)
+    public function getCustomerDeliveryStats(string $phoneNumber): array
     {
         CourierFraudCheckerHelper::validatePhoneNumber($phoneNumber);
 
         $response = $this->requestWithToken(function ($token) use ($phoneNumber) {
 
             return Http::withToken($token)
-                ->get($this->successUrl . $phoneNumber);
+                ->get($this->successUrl.$phoneNumber);
         });
 
         if (! $response->successful()) {
             return [
-                'error'  => 'Failed to retrieve customer data',
+                'error' => 'Failed to retrieve customer data',
                 'status' => $response->status(),
             ];
         }
 
         $data = data_get($response->json(), 'data');
 
-        $total  = (int) ($data['total_order'] ?? 0);
+        $total = (int) ($data['total_order'] ?? 0);
         $cancel = (int) ($data['cancelled_order'] ?? 0);
         $cancel = max(0, min($cancel, $total));
 
@@ -84,5 +87,4 @@ class CarryBeeService
             'data_type' => 'delivery',
         ], $stats);
     }
-    
 }

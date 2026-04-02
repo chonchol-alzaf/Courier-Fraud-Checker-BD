@@ -1,30 +1,49 @@
 <?php
+
 namespace Alzaf\BdCourier\Traits;
 
 use Alzaf\BdCourier\Exceptions\CourierValidationException;
 
 trait ParcelValidationTrait
 {
-    
-    public function validation($data, $requiredFields)
+    public function validateRequiredFields(array $data, array $requiredFields): void
     {
-        if (! is_array($data) || ! is_array($requiredFields)) {
-            throw new \TypeError("Argument must be of the type array", 500);
+        if ($requiredFields === []) {
+            throw new CourierValidationException('Invalid data!', 422);
         }
 
-        if (! count($data) || ! count($requiredFields)) {
-            throw new CourierValidationException("Invalid data!", 422);
-        }
+        $missingFields = [];
 
-        $requiredColumns = array_diff($requiredFields, array_keys($data));
-        if (count($requiredColumns)) {
-            throw new CourierValidationException($requiredColumns, 422);
-        }
-
-        foreach ($requiredFields as $filed) {
-            if (isset($data[$filed]) && empty($data[$filed])) {
-                throw new CourierValidationException("$filed is required", 422);
+        foreach ($requiredFields as $field) {
+            if (! array_key_exists($field, $data) || $this->isEmptyRequiredValue($data[$field])) {
+                $missingFields[] = $field;
             }
         }
+
+        if ($missingFields !== []) {
+            throw new CourierValidationException($missingFields, 422);
+        }
+    }
+
+    public function validation($data, $requiredFields): void
+    {
+        if (! is_array($data) || ! is_array($requiredFields)) {
+            throw new \TypeError('Argument must be of the type array', 500);
+        }
+
+        $this->validateRequiredFields($data, $requiredFields);
+    }
+
+    private function isEmptyRequiredValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        return is_array($value) && $value === [];
     }
 }
