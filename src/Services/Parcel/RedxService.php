@@ -1,5 +1,4 @@
 <?php
-
 namespace Alzaf\BdCourier\Services\Parcel;
 
 use Alzaf\BdCourier\Contracts\ParcelServiceInterface;
@@ -33,14 +32,14 @@ class RedxService implements ParcelServiceInterface
         ]);
 
         $this->base_url = config('bd-courier.redx.outgoing.base_url');
-        $this->token = config('bd-courier.redx.outgoing.token');
+        $this->token    = config('bd-courier.redx.outgoing.token');
     }
 
     public function errorThrow(Response $response): never
     {
         $validation_errors = data_get($response->json(), 'validation_errors');
-        $message = data_get($response->json(), 'message') ?? 'Something goes wrong!';
-        $code = $response->status() ?? 500;
+        $message           = data_get($response->json(), 'message') ?? 'Something goes wrong!';
+        $code              = $response->status() ?? 500;
 
         Log::debug($validation_errors);
         if ($validation_errors) {
@@ -56,13 +55,13 @@ class RedxService implements ParcelServiceInterface
     private function redxRequest(string $method, string $uri, array $payload = []): Response
     {
         $request = Http::withHeaders([
-            'API-ACCESS-TOKEN' => 'Bearer '.$this->token,
-            'Content-Type' => 'application/json; charset=UTF-8',
+            'API-ACCESS-TOKEN' => 'Bearer ' . $this->token,
+            'Content-Type'     => 'application/json; charset=UTF-8',
         ]);
 
         return match (strtolower($method)) {
-            'get' => $request->get($this->base_url.$uri, $payload),
-            'post' => $request->post($this->base_url.$uri, $payload),
+            'get'   => $request->get($this->base_url . $uri, $payload),
+            'post'  => $request->post($this->base_url . $uri, $payload),
             default => throw new \InvalidArgumentException("Unsupported Redx request method [{$method}]"),
         };
     }
@@ -79,14 +78,14 @@ class RedxService implements ParcelServiceInterface
 
         $area_lists = collect($data)->map(function ($item) {
             return [
-                'id' => $item['id'] ?? null,
-                'name' => $item['name'] ?? null,
-                'post_code' => $item['post_code'] ?? null,
-                'zone_id' => $item['zone_id'] ?? null,
-                'district_name' => $item['district_name'] ?? null,
-                'division_name' => $item['division_name'] ?? null,
+                'id'                      => $item['id'] ?? null,
+                'name'                    => $item['name'] ?? null,
+                'post_code'               => $item['post_code'] ?? null,
+                'zone_id'                 => $item['zone_id'] ?? null,
+                'district_name'           => $item['district_name'] ?? null,
+                'division_name'           => $item['division_name'] ?? null,
                 'home_delivery_available' => $item['home_delivery_available'] ?? true,
-                'pickup_available' => $item['pickup_available'] ?? true,
+                'pickup_available'        => $item['pickup_available'] ?? true,
             ];
         });
 
@@ -124,7 +123,7 @@ class RedxService implements ParcelServiceInterface
         }
 
         return [
-            'area_id' => (int) $courierArea->courier_id,
+            'area_id'   => (int) $courierArea->courier_id,
             'area_name' => $courierArea->name,
         ];
     }
@@ -137,8 +136,8 @@ class RedxService implements ParcelServiceInterface
         $mapping = $this->resolveLocationByArea($pickup_points->area_id);
 
         $data = [
-            'name' => config('app.platform_name')."({$pickup_points->vendor->name}-{$pickup_points->id})",
-            'phone' => $pickup_points->contact_number,
+            'name'    => config('app.platform_name'),
+            'phone'   => $pickup_points->contact_number,
             'address' => $pickup_points->address,
             'area_id' => $mapping['area_id'],
         ];
@@ -152,7 +151,7 @@ class RedxService implements ParcelServiceInterface
         $store_id = data_get($response->json(), 'id');
 
         return [
-            'store_id' => $store_id,
+            'store_id'      => $store_id,
             'provider_data' => $response->json(),
         ];
     }
@@ -175,19 +174,19 @@ class RedxService implements ParcelServiceInterface
         $mapping = $this->resolveLocationByArea($data['recipient_area_id']);
 
         $payload = [
-            'customer_name' => $data['recipient_name'],
-            'customer_phone' => $data['recipient_phone'],
-            'delivery_area' => $mapping['area_name'],
-            'delivery_area_id' => $mapping['area_id'],
-            'customer_address' => $data['recipient_address'],
+            'customer_name'          => $data['recipient_name'],
+            'customer_phone'         => $data['recipient_phone'],
+            'delivery_area'          => $mapping['area_name'],
+            'delivery_area_id'       => $mapping['area_id'],
+            'customer_address'       => $data['recipient_address'],
             'cash_collection_amount' => (string) $data['amount_to_collect'],
-            'parcel_weight' => $this->normalizeParcelWeight($data['item_weight']),
-            'merchant_invoice_id' => $data['merchant_order_id'] ?? null,
-            'instruction' => $data['special_instruction'] ?? null,
-            'type' => $data['type'] ?? null,
-            'value' => $data['amount_to_collect'],
-            'parcel_details_json' => $this->buildParcelDetailsPayload($data),
-            'pickup_store_id' => $data['store_id'],
+            'parcel_weight'          => $this->normalizeParcelWeight($data['item_weight']),
+            'merchant_invoice_id'    => $data['merchant_order_id'] ?? null,
+            'instruction'            => $data['special_instruction'] ?? null,
+            'type'                   => $data['type'] ?? null,
+            'value'                  => $data['amount_to_collect'],
+            'parcel_details_json'    => $this->buildParcelDetailsPayload($data),
+            'pickup_store_id'        => $data['store_id'],
         ];
 
         $payload = $this->filterPayload($payload);
@@ -202,8 +201,8 @@ class RedxService implements ParcelServiceInterface
 
         return [
             'consignment_id' => $trackingId,
-            'tracking_id' => $trackingId,
-            'order_status' => 'created',
+            'tracking_id'    => $trackingId,
+            'order_status'   => 'created',
         ];
 
     }
@@ -211,11 +210,11 @@ class RedxService implements ParcelServiceInterface
     private function buildParcelDetailsPayload(array $data): array
     {
         $details = array_filter([
-            'item_quantity' => $data['item_quantity'] ?? null,
-            'item_type' => $data['item_type'] ?? null,
-            'delivery_type' => $data['delivery_type'] ?? null,
+            'item_quantity'    => $data['item_quantity'] ?? null,
+            'item_type'        => $data['item_type'] ?? null,
+            'delivery_type'    => $data['delivery_type'] ?? null,
             'item_description' => $data['item_description'] ?? null,
-        ], fn ($value) => $value !== null && $value !== '');
+        ], fn($value) => $value !== null && $value !== '');
 
         if ($details === []) {
             return [];
@@ -245,6 +244,6 @@ class RedxService implements ParcelServiceInterface
 
     private function filterPayload(array $payload): array
     {
-        return array_filter($payload, fn ($value) => $value !== null && $value !== '' && $value !== []);
+        return array_filter($payload, fn($value) => $value !== null && $value !== '' && $value !== []);
     }
 }

@@ -41,7 +41,7 @@ class CourierFraudCheckerSupport
     {
         return array_filter(
             self::SERVICE_MAP,
-            fn (string $service) => (bool) config("bd-courier.{$service}.enable"),
+            fn (string $service) => (bool) config("bd-courier.{$service}.fraud_check_enable"),
             ARRAY_FILTER_USE_KEY
         );
     }

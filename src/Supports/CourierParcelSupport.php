@@ -29,9 +29,14 @@ class CourierParcelSupport
 
     public function call(string $courier, string $action, mixed ...$args): mixed
     {
-        $serviceClass = $this->services[strtolower($courier)] ?? null;
+        $courier = strtolower($courier);
+        $serviceClass = $this->services[$courier] ?? null;
         if (! $serviceClass) {
             return ['error' => "Unsupported courier [{$courier}]"];
+        }
+
+        if (! (bool) config("bd-courier.{$courier}.parcel_enable")) {
+            return ['error' => "Parcel service [{$courier}] is disabled"];
         }
 
         $service = $this->container->make($serviceClass);
