@@ -85,14 +85,51 @@ class RedxService implements FraudCheckServiceInterface
 
         $object = $response->json('data') ?? [];
 
-        $success = (int) ($object['deliveredParcels'] ?? 0);
-        $total = (int) ($object['totalParcels'] ?? 0);
-        $cancel = max($total - $success, 0);
+        return array_merge(
+            ['data_type' => 'delivery'],
+            self::statsFromPayload(is_array($object) ? $object : [])
+        );
+    }
 
-        $stats = DeliveryStatsCalculator::calculate($success, $cancel);
+    /**
+     * Redx reports every parcel ever booked for the phone, including the ones still on the way. Only delivered
+     * and returned parcels say anything about the customer, so parcels in transit are reported but not counted:
+     * `total` and `success_rate` cover resolved parcels only, `booked` is Redx's full count.
+     *
+     * Returned parcels come from an explicit count when Redx sends one, otherwise from `returnPercentage` of the
+     * booked parcels. Without either figure every undelivered parcel counts as returned, as it did before.
+     *
+     * @param  array  $data  the `data` object of the customer-success-return-rate response
+     */
+    public static function statsFromPayload(array $data): array
+    {
+        $booked = max(0, (int) ($data['totalParcels'] ?? 0));
+        $delivered = min($booked, max(0, (int) ($data['deliveredParcels'] ?? 0)));
+        $undelivered = $booked - $delivered;
 
-        return array_merge([
-            'data_type' => 'delivery',
-        ], $stats);
+        $returned = null;
+        foreach (['returnedParcels', 'returnParcels', 'cancelledParcels'] as $key) {
+            if (isset($data[$key]) && is_numeric($data[$key])) {
+                $returned = (int) $data[$key];
+                break;
+            }
+        }
+
+        $returnPercentage = $data['returnPercentage'] ?? null;
+        if ($returned === null && is_numeric($returnPercentage) && (float) $returnPercentage >= 0 && (float) $returnPercentage <= 100) {
+            $returned = (int) round($booked * (float) $returnPercentage / 100);
+        }
+
+        $returnSource = $returned === null ? 'assumed' : 'reported';
+        $returned = $returned === null ? $undelivered : min($undelivered, max(0, $returned));
+
+        $segment = $data['customerSegment'] ?? null;
+
+        return array_merge(DeliveryStatsCalculator::calculate($delivered, $returned), [
+            'booked' => $booked,
+            'in_transit' => $undelivered - $returned,
+            'return_source' => $returnSource,
+            'customer_segment' => is_string($segment) && $segment !== '' ? $segment : null,
+        ]);
     }
 }

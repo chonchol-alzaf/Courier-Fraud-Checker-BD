@@ -97,10 +97,19 @@ print_r($result);
 
 ```php
 [
-    'pathao' => ['success' => 5, 'cancel' => 2, 'total' => 7],
-    'steadfast' => ['success' => 3, 'cancel' => 1, 'total' => 4]
+    'steadfast' => ['data_type' => 'delivery', 'success' => 3, 'cancel' => 1, 'total' => 4, 'success_rate' => 75.0, 'cancel_rate' => 25.0, 'risk_level' => 'safe'],
+    'redx' => ['data_type' => 'delivery', 'success' => 6, 'cancel' => 2, 'total' => 8, 'success_rate' => 75.0, 'cancel_rate' => 25.0, 'risk_level' => 'safe',
+               'booked' => 10, 'in_transit' => 2, 'return_source' => 'reported', 'customer_segment' => 'Normal Customer'],
+    'pathao' => ['data_type' => 'rating', 'rating' => 'good_customer', 'risk_level' => 'safe', 'success_rate' => 85],
+    'totalSummary' => ['success' => 9, 'cancel' => 3, 'total' => 12, 'success_rate' => 75.0, 'cancel_rate' => 25.0, 'risk_level' => 'safe'],
 ]
 ```
+
+`total` and `success_rate` only count parcels that were delivered or returned. Redx reports every parcel ever
+booked for a phone, including the ones still on the way, so those are shown as `in_transit` (with the full count
+in `booked`) and are not counted against the customer. `return_source` is `reported` when Redx sent a return
+figure and `assumed` when it did not (then every undelivered parcel counts as returned). A courier that only
+returns a rating (Pathao) is listed on its own and is not part of `totalSummary`.
 
 ---
 

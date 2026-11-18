@@ -20,6 +20,9 @@ class CourierFraudCheckerSupport
         'carrybee' => CarryBeeService::class,
     ];
 
+    /** Bump when a service changes how it counts, so cached results from the old counting are not served. */
+    private const CACHE_VERSION = 2;
+
     public function __construct(protected Container $container) {}
 
     public function check(string $phoneNumber, bool $is_disable_cache = true): array
@@ -68,7 +71,7 @@ class CourierFraudCheckerSupport
 
     protected function safeServiceCall(string $service, string $serviceClass, string $phoneNumber, bool $is_disable_cache): array
     {
-        $cacheKey = "courier:{$service}:phone:{$phoneNumber}";
+        $cacheKey = 'courier:v'.self::CACHE_VERSION.":{$service}:phone:{$phoneNumber}";
         $shouldUseCache = ! $is_disable_cache;
 
         $fetchStats = function () use ($serviceClass, $phoneNumber): array {
