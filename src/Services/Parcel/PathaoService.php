@@ -197,6 +197,48 @@ class PathaoService implements ParcelServiceInterface
         ];
     }
 
+    /**
+     * All merchant stores, every page, in the same row shape as CarryBeeService::storeList().
+     * Pathao has no separate approval flag: a store is usable once Pathao sets is_active.
+     */
+    public function storeList(): array
+    {
+        $stores = [];
+        $page = 1;
+
+        do {
+            $response = $this->authorizedJsonRequest('get', '/aladdin/api/v1/stores', ['page' => $page]);
+
+            if (! $response->successful()) {
+                $this->errorThrow($response);
+            }
+
+            foreach ((array) data_get($response->json(), 'data.data', []) as $store) {
+                $storeId = (string) data_get($store, 'store_id', '');
+                if ($storeId === '') {
+                    continue;
+                }
+
+                $isActive = filter_var(data_get($store, 'is_active'), FILTER_VALIDATE_BOOLEAN);
+
+                $stores[] = [
+                    'store_id' => $storeId,
+                    'name' => (string) data_get($store, 'store_name', ''),
+                    'is_active' => $isActive,
+                    'is_approved' => $isActive,
+                    'city_id' => data_get($store, 'city_id'),
+                    'zone_id' => data_get($store, 'zone_id'),
+                    'area_id' => null,
+                ];
+            }
+
+            $lastPage = max(1, (int) data_get($response->json(), 'data.last_page', 1));
+            $page++;
+        } while ($page <= $lastPage && $page <= 50);
+
+        return $stores;
+    }
+
     public function cityList()
     {
         $cache_key = 'pathoa:city-lists';
