@@ -76,6 +76,13 @@ REDX_PASSWORD=your_redx_password
 # CarryBee Credentials
 CARRYBEE_PHONE=01XXXXXXXXX
 CARRYBEE_PASSWORD=your_carrybee_password
+
+# CarryBee parcel API (merchant.carrybee.com -> API Credentials, one set per environment)
+CARRYBEE_BASE_URL=https://sandbox.carrybee.com
+CARRYBEE_CLIENT_ID=
+CARRYBEE_CLIENT_SECRET=
+CARRYBEE_CLIENT_CONTEXT=
+CARRYBEE_WEBHOOK_SECRET=
 CARRYBEE_BUSINESS_ID=your_business_id
 ```
 
