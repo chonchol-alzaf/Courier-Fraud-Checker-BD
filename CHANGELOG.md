@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.3.0 - 2026-11-24
+
+- Pathao: `storeList()` returns every merchant store (all pages) in the same
+  row shape as CarryBee's (`store_id`, `name`, `is_active`, `is_approved`, ...).
+  Pathao has no separate approval flag, so `is_approved` mirrors `is_active`.
+  Consumers use it to sync pending store approvals.
+
 ## v1.1.2 - 2026-11-18
 
 - Redx: parcels still in transit are no longer counted as returned. `total` and
