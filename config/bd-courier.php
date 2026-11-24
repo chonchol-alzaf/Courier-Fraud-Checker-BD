@@ -74,17 +74,26 @@ return [
     ],
 
     CourierEnum::CARRYBEE->value  => [
+        'sandbox'            => env('CARRYBEE_SANDBOX', false),
         'fraud_check_enable' => env('CARRYBEE_FRAUD_CHECK_ENABLE', true),
         'parcel_enable'      => env('CARRYBEE_PARCEL_ENABLE', false),
         'outgoing'           => [
-            'business_id' => env('CARRYBEE_BUSINESS_ID'),
-            'phone'       => env('CARRYBEE_PHONE'),
-            'password'    => env('CARRYBEE_PASSWORD'),
+            // Production https://developers.carrybee.com, sandbox https://sandbox.carrybee.com
+            'base_url'       => env('CARRYBEE_BASE_URL', 'https://sandbox.carrybee.com'),
+            'client_id'      => env('CARRYBEE_CLIENT_ID'),
+            'client_secret'  => env('CARRYBEE_CLIENT_SECRET'),
+            'client_context' => env('CARRYBEE_CLIENT_CONTEXT'),
+            // Merchant-panel login, used only by the fraud check (FraudCheck\CarryBeeService).
+            'business_id'    => env('CARRYBEE_BUSINESS_ID'),
+            'phone'          => env('CARRYBEE_PHONE'),
+            'password'       => env('CARRYBEE_PASSWORD'),
         ],
 
         'incoming'           => [
-            'secret_header' => env('CARRYBEE_WEBHOOK_SECRET_HEADER', 'X-Carrybee-Webhook-Secret'),
+            // CarryBee sends the secret in this header and expects it echoed back with HTTP 202 on the integration event.
+            'secret_header' => 'X-CB-Webhook-Integration-Header',
             'secret'        => env('CARRYBEE_WEBHOOK_SECRET'),
+            'event_key'     => 'event',
         ],
     ],
 ];
